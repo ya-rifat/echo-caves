@@ -17,6 +17,7 @@ function iMouseMove() is called when the user moves the mouse.
 void iMouseMove(int mx, int my)
 {
     // place your codes here
+		// test
 }
 
 /*
