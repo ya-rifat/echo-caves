@@ -7,7 +7,9 @@ void iDraw()
 {
     // place your drawing codes here
     iClear();
-    iText(140, 180, "Hello World");
+    iText(140, 180, "Line1");
+    iText(160, 160, "Line2");
+    iText(180, 140, "Line3");
 }
 
 /*
