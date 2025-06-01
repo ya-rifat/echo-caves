@@ -1,5 +1,7 @@
 #include "iGraphics.h"
+#include <windows.h>
 
+int play_button_state;
 /*
 function iDraw() is called again and again by the system.
 */
@@ -7,25 +9,47 @@ void iDraw()
 {
     // place your drawing codes here
     iClear();
-    iText(140, 180, "Line1");
-    iText(180, 140, "Line3");
+
+		//start_screen
+		iShowImage(177, 385, "assets/title_logo.png");
+
+		switch (play_button_state) {
+			case 0:
+				iShowImage(253, 280, "assets/play_button.png");
+				break;
+			
+			case 1:
+				iShowImage(253, 280, "assets/play_button_hover.png");
+				break;
+
+			case 2:
+				iShowImage(253, 280, "assets/play_button_pressed.png");
+				// Sleep(10000);
+				// exit(0);
+				break;
+			default:
+				break;
+		}
 }
 
 /*
 function iMouseMove() is called when the user moves the mouse.
 (mx, my) is the position where the mouse pointer is.
 */
-void iMouseMove(int mx, int my)
-{
-    // place your codes here
+void iMouseMove(int mx, int my) {
+	if ((mx > 253 && mx < 547) && (my > 280 && my < 340)) {
+		play_button_state = 1;
+	} else {
+		play_button_state = 0;
+	}
+	
 }
 
 /*
 function iMouseDrag() is called when the user presses and drags the mouse.
 (mx, my) is the position where the mouse pointer is.
 */
-void iMouseDrag(int mx, int my)
-{
+void iMouseDrag(int mx, int my) {
     // place your codes here
 }
 
@@ -37,7 +61,7 @@ void iMouse(int button, int state, int mx, int my)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
-        // place your codes here
+      if (play_button_state) play_button_state = 2;
     }
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
