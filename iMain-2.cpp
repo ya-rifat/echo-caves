@@ -97,6 +97,6 @@ int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
     // place your own initialization codes here.
-    iInitialize(400, 400, "demooo");
+    iInitialize(800, 500, "Echo Caves");
     return 0;
 }

@@ -4,7 +4,7 @@ setlocal
 :: Set default source file if not provided
 if "%~1"=="" (
     set "SOURCE_FILE=iMain-2.cpp"
-    echo No input file specified. Using default: iMain.cpp
+    echo No input file specified. Using default: iMain-2.cpp
 ) else (
     set "SOURCE_FILE=%~1"
 )
