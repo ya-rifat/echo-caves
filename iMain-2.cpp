@@ -1,13 +1,11 @@
 #include "iGraphics.h"
-#include <windows.h>
 
 int play_button_state;
-/*
-function iDraw() is called again and again by the system.
-*/
+
+int currentScreen = 0; //0 means star screen
+
 void iDraw()
 {
-    // place your drawing codes here
     iClear();
 
 		//start_screen
@@ -24,31 +22,19 @@ void iDraw()
 
 			case 2:
 				iShowImage(253, 280, "assets/play_button_pressed.png");
-				Sleep(10000);
-				// exit(0);
 				break;
 			default:
 				break;
 		}
 }
 
-/*
-function iMouseMove() is called when the user moves the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
+//mouse move
 void iMouseMove(int mx, int my) {
-	if ((mx > 253 && mx < 547) && (my > 280 && my < 340)) {
-		play_button_state = 1;
-	} else {
-		play_button_state = 0;
-	}
+	if ((mx > 253 && mx < 547) && (my > 280 && my < 340)) play_button_state = 1; else play_button_state = 0;
 	
 }
 
-/*
-function iMouseDrag() is called when the user presses and drags the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
+//mouse drag and move
 void iMouseDrag(int mx, int my) {
     // place your codes here
 }
