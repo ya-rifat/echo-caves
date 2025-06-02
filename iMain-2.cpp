@@ -24,7 +24,7 @@ void iDraw()
 
 			case 2:
 				iShowImage(253, 280, "assets/play_button_pressed.png");
-				// Sleep(10000);
+				Sleep(10000);
 				// exit(0);
 				break;
 			default:
