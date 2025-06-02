@@ -4,7 +4,8 @@
 void startScreen();
 
 //button states
-int play_button_state;
+//start screen
+int play_button, settings_button, exit_button;
 
 int currentScreen; //0 means star screen
 
@@ -24,8 +25,15 @@ void iDraw()
 
 //mouse move
 void iMouseMove(int mx, int my) {
-	if ((mx > 253 && mx < 547) && (my > 280 && my < 340)) play_button_state = 1; else play_button_state = 0;
-	
+	switch (currentScreen) {
+		case 0:			
+			if ((mx > 265 && mx < 535) && (my > 280 && my < 340)) play_button = 1; else play_button = 0;
+			if ((mx > 265 && mx < 535) && (my > 218 && my < 278)) settings_button = 1; else settings_button = 0;
+			break;
+		
+		default:
+			break;
+	}
 }
 
 //mouse drag and move
@@ -42,7 +50,8 @@ void iMouse(int button, int state, int mx, int my)
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 			switch (currentScreen) {
 				case 0:
-					if (play_button_state) play_button_state = 2;
+					if (play_button) play_button = 2;
+					if (settings_button) settings_button = 2;
 					break;
 				
 				default:
@@ -113,17 +122,33 @@ int main(int argc, char *argv[])
 void startScreen() {
 	iShowImage(177, 385, "assets/title_logo.png");
 
-	switch (play_button_state) {
+	switch (play_button) {
 		case 0:
-			iShowImage(253, 280, "assets/buttons/play_button.png");
+			iShowImage(265, 280, "assets/buttons/play_button.png");
 			break;
 		
 		case 1:
-			iShowImage(253, 280, "assets/buttons/play_button_hover.png");
+			iShowImage(265, 280, "assets/buttons/play_button_hover.png");
 			break;
 
 		case 2:
-			iShowImage(253, 280, "assets/buttons/play_button_pressed.png");
+			iShowImage(265, 280, "assets/buttons/play_button_pressed.png");
+			break;
+		default:
+			break;
+	}
+
+	switch (settings_button) {
+		case 0:
+			iShowImage(265, 218, "assets/buttons/settings_button.png");
+			break;
+		
+		case 1:
+			iShowImage(265, 218, "assets/buttons/settings_button_hover.png");
+			break;
+
+		case 2:
+			iShowImage(265, 218, "assets/buttons/settings_button_pressed.png");
 			break;
 		default:
 			break;
