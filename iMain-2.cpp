@@ -6,7 +6,7 @@ void underConstruction();
 
 //button states
 //start screen
-int play_button, settings_button, exit_button;
+int play_button, settings_button, leaderboard_button, exit_button;
 
 int currentScreen; //0 means star screen
 
@@ -34,6 +34,7 @@ void iMouseMove(int mx, int my) {
 		case 0:			
 			if ((mx > 265 && mx < 535) && (my > 280 && my < 340)) play_button = 1; else play_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 218 && my < 278)) settings_button = 1; else settings_button = 0;
+			if ((mx > 265 && mx < 535) && (my > 156 && my < 216)) leaderboard_button = 1; else leaderboard_button = 0;
 			break;
 		
 		default:
@@ -57,6 +58,28 @@ void iMouse(int button, int state, int mx, int my)
 				case 0:
 					if (play_button) play_button = 2;
 					if (settings_button) settings_button = 2;
+					if (leaderboard_button) leaderboard_button = 2;
+					break;
+
+				case 100:
+					break;
+				
+				default:
+					break;
+			}
+    }
+		if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+			switch (currentScreen) {
+				case 0:
+					if (play_button) play_button = 2;
+					if (settings_button) {
+						currentScreen = 100;
+						settings_button = 0;
+					}
+					if (leaderboard_button) {
+						currentScreen = 100;
+						leaderboard_button = 0;
+					}
 					break;
 
 				case 100:
@@ -131,38 +154,21 @@ void startScreen() {
 	iShowImage(177, 385, "assets/title_logo.png");
 
 	switch (play_button) {
-		case 0:
-			iShowImage(265, 280, "assets/buttons/play_button.png");
-			break;
-		
-		case 1:
-			iShowImage(265, 280, "assets/buttons/play_button_hover.png");
-			break;
-
-		case 2:
-			iShowImage(265, 280, "assets/buttons/play_button_pressed.png");
-			break;
-		default:
-			break;
+		case 0: iShowImage(265, 280, "assets/buttons/play_button.png"); break;
+		case 1: iShowImage(265, 280, "assets/buttons/play_button_hover.png"); break;
+		case 2: iShowImage(265, 280, "assets/buttons/play_button_pressed.png"); break;
 	}
 
 	switch (settings_button) {
-		case 0:
-			iShowImage(265, 218, "assets/buttons/settings_button.png");
-			break;
-		
-		case 1:
-			iShowImage(265, 218, "assets/buttons/settings_button_hover.png");
-			break;
+		case 0: iShowImage(265, 218, "assets/buttons/settings_button.png"); break;
+		case 1: iShowImage(265, 218, "assets/buttons/settings_button_hover.png"); break;
+		case 2: iShowImage(265, 218, "assets/buttons/settings_button_pressed.png"); break;
+	}
 
-		case 2:
-			iShowImage(265, 218, "assets/buttons/settings_button_pressed.png");
-			currentScreen = 100;
-			settings_button = 0;
-			break;
-
-		default:
-			break;
+	switch (leaderboard_button) {
+		case 0: iShowImage(265, 156, "assets/buttons/leaderboard_button.png"); break;
+		case 1: iShowImage(265, 156, "assets/buttons/leaderboard_button_hover.png"); break;
+		case 2: iShowImage(265, 156, "assets/buttons/leaderboard_button_pressed.png"); break;
 	}
 }
 
