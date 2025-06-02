@@ -2,6 +2,7 @@
 
 //function declarations
 void startScreen();
+void underConstruction();
 
 //button states
 //start screen
@@ -18,6 +19,10 @@ void iDraw()
 			startScreen();
 			break;
 		
+		case 100:
+			underConstruction();
+			break;
+
 		default:
 			break;
 	}
@@ -53,6 +58,9 @@ void iMouse(int button, int state, int mx, int my)
 					if (play_button) play_button = 2;
 					if (settings_button) settings_button = 2;
 					break;
+
+				case 100:
+					break;
 				
 				default:
 					break;
@@ -75,7 +83,7 @@ void iKeyboard(unsigned char key)
 {
 	switch (key) {
     case 'q':
-			// do something with 'q'
+			currentScreen = 0;
 			break;
 			
     default:
@@ -149,8 +157,15 @@ void startScreen() {
 
 		case 2:
 			iShowImage(265, 218, "assets/buttons/settings_button_pressed.png");
+			currentScreen = 100;
+			settings_button = 0;
 			break;
+
 		default:
 			break;
 	}
+}
+
+void underConstruction() {
+	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
 }
