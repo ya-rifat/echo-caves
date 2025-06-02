@@ -115,15 +115,15 @@ void startScreen() {
 
 	switch (play_button_state) {
 		case 0:
-			iShowImage(253, 280, "assets/play_button.png");
+			iShowImage(253, 280, "assets/buttons/play_button.png");
 			break;
 		
 		case 1:
-			iShowImage(253, 280, "assets/play_button_hover.png");
+			iShowImage(253, 280, "assets/buttons/play_button_hover.png");
 			break;
 
 		case 2:
-			iShowImage(253, 280, "assets/play_button_pressed.png");
+			iShowImage(253, 280, "assets/buttons/play_button_pressed.png");
 			break;
 		default:
 			break;
