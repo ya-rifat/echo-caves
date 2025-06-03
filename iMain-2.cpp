@@ -8,13 +8,13 @@ void underConstruction();
 //start screen
 int play_button, settings_button, leaderboard_button, exit_button;
 
-int currentScreen; //0 means star screen
+int current_screen; //0 means star screen
 
 void iDraw()
 {
 	iClear();
 
-	switch (currentScreen) {
+	switch (current_screen) {
 		case 0:
 			startScreen();
 			break;
@@ -30,11 +30,11 @@ void iDraw()
 
 //mouse move
 void iMouseMove(int mx, int my) {
-	switch (currentScreen) {
+	switch (current_screen) {
 		case 0:			
-			if ((mx > 265 && mx < 535) && (my > 280 && my < 340)) play_button = 1; else play_button = 0;
-			if ((mx > 265 && mx < 535) && (my > 218 && my < 278)) settings_button = 1; else settings_button = 0;
-			if ((mx > 265 && mx < 535) && (my > 156 && my < 216)) leaderboard_button = 1; else leaderboard_button = 0;
+			if ((mx > 265 && mx < 535) && (my > 260 && my < 320)) play_button = 1; else play_button = 0;
+			if ((mx > 265 && mx < 535) && (my > 198 && my < 258)) settings_button = 1; else settings_button = 0;
+			if ((mx > 265 && mx < 535) && (my > 126 && my < 196)) leaderboard_button = 1; else leaderboard_button = 0;
 			break;
 		
 		default:
@@ -54,7 +54,7 @@ function iMouse() is called when the user presses/releases the mouse.
 void iMouse(int button, int state, int mx, int my)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-			switch (currentScreen) {
+			switch (current_screen) {
 				case 0:
 					if (play_button) play_button = 2;
 					if (settings_button) settings_button = 2;
@@ -69,15 +69,15 @@ void iMouse(int button, int state, int mx, int my)
 			}
     }
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
-			switch (currentScreen) {
+			switch (current_screen) {
 				case 0:
 					if (play_button) play_button = 2;
 					if (settings_button) {
-						currentScreen = 100;
+						current_screen = 100;
 						settings_button = 0;
 					}
 					if (leaderboard_button) {
-						currentScreen = 100;
+						current_screen = 100;
 						leaderboard_button = 0;
 					}
 					break;
@@ -106,7 +106,7 @@ void iKeyboard(unsigned char key)
 {
 	switch (key) {
     case 'q':
-			currentScreen = 0;
+			current_screen = 0;
 			break;
 			
     default:
@@ -136,7 +136,7 @@ void iSpecialKeyboard(unsigned char key)
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
-	currentScreen = 0;
+	current_screen = 0;
 	iInitialize(800, 500, "Echo Caves");
 	return 0;
 }
@@ -151,24 +151,25 @@ int main(int argc, char *argv[])
 
 
 void startScreen() {
-	iShowImage(177, 385, "assets/title_logo.png");
+	iShowImage(167.5, 380, "assets/title.png");
+	iShowImage(10, 10, "assets/texts/version.png");
 
 	switch (play_button) {
-		case 0: iShowImage(265, 280, "assets/buttons/play_button.png"); break;
-		case 1: iShowImage(265, 280, "assets/buttons/play_button_hover.png"); break;
-		case 2: iShowImage(265, 280, "assets/buttons/play_button_pressed.png"); break;
+		case 0: iShowImage(265, 260, "assets/buttons/play_button.png"); break;
+		case 1: iShowImage(265, 260, "assets/buttons/play_button_hover.png"); break;
+		case 2: iShowImage(265, 260, "assets/buttons/play_button_pressed.png"); break;
 	}
 
 	switch (settings_button) {
-		case 0: iShowImage(265, 218, "assets/buttons/settings_button.png"); break;
-		case 1: iShowImage(265, 218, "assets/buttons/settings_button_hover.png"); break;
-		case 2: iShowImage(265, 218, "assets/buttons/settings_button_pressed.png"); break;
+		case 0: iShowImage(265, 198, "assets/buttons/settings_button.png"); break;
+		case 1: iShowImage(265, 198, "assets/buttons/settings_button_hover.png"); break;
+		case 2: iShowImage(265, 198, "assets/buttons/settings_button_pressed.png"); break;
 	}
 
 	switch (leaderboard_button) {
-		case 0: iShowImage(265, 156, "assets/buttons/leaderboard_button.png"); break;
-		case 1: iShowImage(265, 156, "assets/buttons/leaderboard_button_hover.png"); break;
-		case 2: iShowImage(265, 156, "assets/buttons/leaderboard_button_pressed.png"); break;
+		case 0: iShowImage(265, 136, "assets/buttons/leaderboard_button.png"); break;
+		case 1: iShowImage(265, 136, "assets/buttons/leaderboard_button_hover.png"); break;
+		case 2: iShowImage(265, 136, "assets/buttons/leaderboard_button_pressed.png"); break;
 	}
 }
 
