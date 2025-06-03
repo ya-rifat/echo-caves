@@ -6,7 +6,7 @@ void underConstruction();
 
 //button states
 //start screen
-int play_button, settings_button, leaderboard_button, exit_button;
+int play_button, settings_button, leaderboard_button, exit_button, help_button;
 
 int current_screen; //0 means star screen
 
@@ -35,6 +35,8 @@ void iMouseMove(int mx, int my) {
 			if ((mx > 265 && mx < 535) && (my > 260 && my < 320)) play_button = 1; else play_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 198 && my < 258)) settings_button = 1; else settings_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 126 && my < 196)) leaderboard_button = 1; else leaderboard_button = 0;
+			if ((mx > 730 && mx < 790) && (my > 10 && my < 70)) exit_button = 1; else exit_button = 0;
+			if ((mx > 665 && mx < 725) && (my > 10 && my < 70)) help_button = 1; else help_button = 0;
 			break;
 		
 		default:
@@ -59,6 +61,8 @@ void iMouse(int button, int state, int mx, int my)
 					if (play_button) play_button = 2;
 					if (settings_button) settings_button = 2;
 					if (leaderboard_button) leaderboard_button = 2;
+					if (exit_button) exit_button = 2;
+					if (help_button) help_button = 2;
 					break;
 
 				case 100:
@@ -80,6 +84,12 @@ void iMouse(int button, int state, int mx, int my)
 						current_screen = 100;
 						leaderboard_button = 0;
 					}
+					if (exit_button) exit(0);
+					if (help_button) {
+						current_screen = 100;
+						help_button = 0;
+					}
+					
 					break;
 
 				case 100:
@@ -146,7 +156,7 @@ int main(int argc, char *argv[])
 /**
  * Define screens here..........
  * 
- * Declare them on top first...
+ * Declare them on top first
  */
 
 
@@ -170,6 +180,18 @@ void startScreen() {
 		case 0: iShowImage(265, 136, "assets/buttons/leaderboard_button.png"); break;
 		case 1: iShowImage(265, 136, "assets/buttons/leaderboard_button_hover.png"); break;
 		case 2: iShowImage(265, 136, "assets/buttons/leaderboard_button_pressed.png"); break;
+	}
+
+	switch (exit_button) {
+		case 0: iShowImage(730, 10, "assets/buttons/exit_button.png"); break;
+		case 1: iShowImage(730, 10, "assets/buttons/exit_button_hover.png"); break;
+		case 2: iShowImage(730, 10, "assets/buttons/exit_button_pressed.png"); break;
+	}
+	
+	switch (help_button) {
+		case 0: iShowImage(665, 10, "assets/buttons/help_button.png"); break;
+		case 1: iShowImage(665, 10, "assets/buttons/help_button_hover.png"); break;
+		case 2: iShowImage(665, 10, "assets/buttons/help_button_pressed.png"); break;
 	}
 }
 
