@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
  */
 
 
-void startScreen() {
+void startScreen() { //screen index 0
 	iShowImage(167.5, 380, "assets/title.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
@@ -195,6 +195,6 @@ void startScreen() {
 	}
 }
 
-void underConstruction() {
+void underConstruction() { //screen index 100
 	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
 }
