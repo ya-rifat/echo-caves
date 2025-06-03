@@ -31,14 +31,14 @@ void iDraw()
 //mouse move
 void iMouseMove(int mx, int my) {
 	switch (current_screen) {
-		case 0:			
+		case 0:		
 			if ((mx > 265 && mx < 535) && (my > 260 && my < 320)) play_button = 1; else play_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 198 && my < 258)) settings_button = 1; else settings_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 126 && my < 196)) leaderboard_button = 1; else leaderboard_button = 0;
 			if ((mx > 730 && mx < 790) && (my > 10 && my < 70)) exit_button = 1; else exit_button = 0;
 			if ((mx > 665 && mx < 725) && (my > 10 && my < 70)) help_button = 1; else help_button = 0;
 			break;
-		
+
 		default:
 			break;
 	}
