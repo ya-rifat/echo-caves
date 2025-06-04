@@ -45,8 +45,8 @@ void iMouseMove(int mx, int my) {
 			if ((mx > 265 && mx < 535) && (my > 260 && my < 320)) play_button = 1; else play_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 198 && my < 258)) settings_button = 1; else settings_button = 0;
 			if ((mx > 265 && mx < 535) && (my > 126 && my < 196)) leaderboard_button = 1; else leaderboard_button = 0;
-			if ((mx > 730 && mx < 790) && (my > 10 && my < 70)) exit_button = 1; else exit_button = 0;
-			if ((mx > 665 && mx < 725) && (my > 10 && my < 70)) help_button = 1; else help_button = 0;
+			if ((mx > 830 && mx < 890) && (my > 10 && my < 70)) exit_button = 1; else exit_button = 0;
+			if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) help_button = 1; else help_button = 0;
 			break;
 
 		default:
@@ -195,15 +195,15 @@ void startScreen() { //screen index 0
 	}
 
 	switch (exit_button) {
-		case 0: iShowImage(730, 10, "assets/buttons/exit_button.png"); break;
-		case 1: iShowImage(730, 10, "assets/buttons/exit_button_hover.png"); break;
-		case 2: iShowImage(730, 10, "assets/buttons/exit_button_pressed.png"); break;
+		case 0: iShowImage(830, 10, "assets/buttons/exit_button.png"); break;
+		case 1: iShowImage(830, 10, "assets/buttons/exit_button_hover.png"); break;
+		case 2: iShowImage(830, 10, "assets/buttons/exit_button_pressed.png"); break;
 	}
 	
 	switch (help_button) {
-		case 0: iShowImage(665, 10, "assets/buttons/help_button.png"); break;
-		case 1: iShowImage(665, 10, "assets/buttons/help_button_hover.png"); break;
-		case 2: iShowImage(665, 10, "assets/buttons/help_button_pressed.png");
+		case 0: iShowImage(765, 10, "assets/buttons/help_button.png"); break;
+		case 1: iShowImage(765, 10, "assets/buttons/help_button_hover.png"); break;
+		case 2: iShowImage(765, 10, "assets/buttons/help_button_pressed.png");
 			if (!start_button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			start_button_sound = 1;
 			break;
