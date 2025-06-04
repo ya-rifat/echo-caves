@@ -1,7 +1,9 @@
 #include "iGraphics.h"
+#include "iSound.h"
 
 //function declarations
 void startScreen();
+void storyScreen();
 void underConstruction();
 
 //button states
@@ -10,6 +12,10 @@ int play_button, settings_button, leaderboard_button, exit_button, help_button;
 
 int current_screen; //0 means star screen
 
+//sound channels
+//start screen
+int start_button_sound;
+
 void iDraw()
 {
 	iClear();
@@ -17,6 +23,10 @@ void iDraw()
 	switch (current_screen) {
 		case 0:
 			startScreen();
+			break;
+
+		case 4:
+			storyScreen();
 			break;
 		
 		case 100:
@@ -86,8 +96,9 @@ void iMouse(int button, int state, int mx, int my)
 					}
 					if (exit_button) exit(0);
 					if (help_button) {
-						current_screen = 100;
+						current_screen = 4;
 						help_button = 0;
+						start_button_sound = 0;
 					}
 					
 					break;
@@ -109,7 +120,7 @@ dir = 1 for up, -1 for down.
 */
 void iMouseWheel(int dir, int mx, int my)
 {
-    // place your code here
+  // place your code here
 }
 
 void iKeyboard(unsigned char key)
@@ -147,7 +158,8 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	current_screen = 0;
-	iInitialize(800, 500, "Echo Caves");
+	iInitializeSound();
+	iInitialize(900, 600, "Echo Caves");
 	return 0;
 }
 
@@ -161,7 +173,7 @@ int main(int argc, char *argv[])
 
 
 void startScreen() { //screen index 0
-	iShowImage(167.5, 380, "assets/title.png");
+	iShowImage(218, 475, "assets/title.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
 	switch (play_button) {
@@ -191,8 +203,17 @@ void startScreen() { //screen index 0
 	switch (help_button) {
 		case 0: iShowImage(665, 10, "assets/buttons/help_button.png"); break;
 		case 1: iShowImage(665, 10, "assets/buttons/help_button_hover.png"); break;
-		case 2: iShowImage(665, 10, "assets/buttons/help_button_pressed.png"); break;
+		case 2: iShowImage(665, 10, "assets/buttons/help_button_pressed.png");
+			if (!start_button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+			start_button_sound = 1;
+			break;
 	}
+}
+
+void storyScreen() { //screen index 4
+	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
+	iShowImage(400, 80, "assets/texts/back.png");
+	iShowImage(98, 200, "assets/texts/story.png");
 }
 
 void underConstruction() { //screen index 100
