@@ -1,19 +1,18 @@
 #include "iGraphics.h"
 #include "iSound.h"
 
+#define max_buttons 50 //in one screen
+
 //function declarations
 void startScreen();
 void storyScreen();
 void underConstruction();
 
 //button states
-//start screen - 0
-int play_button, settings_button, leaderboard_button, exit_button, help_button, story_button;
+int button_states[max_buttons] = {0}; //one array for all buttons states
 
-//story screen - 4
-int back_button_story;
-
-int current_screen; //0 means star screen
+//screen tracker
+int current_screen;
 
 //sound channels
 //start screen
@@ -44,16 +43,17 @@ void iDraw()
 //mouse move
 void iMouseMove(int mx, int my) {
 	switch (current_screen) {
-		case 0:		
-			if ((mx > 100 && mx < 370) && (my > 304 && my < 364)) settings_button = 1; else settings_button = 0;
-			if ((mx > 100 && mx < 370) && (my > 242 && my < 302)) leaderboard_button = 1; else leaderboard_button = 0;
-			if ((mx > 100 && mx < 370) && (my > 180 && my < 240)) story_button = 1; else story_button = 0;
-			if ((mx > 830 && mx < 890) && (my > 10 && my < 70)) exit_button = 1; else exit_button = 0;
-			if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) help_button = 1; else help_button = 0;
+		case 0:
+			if ((mx > 600 && mx < 700) && (my > 225 && my < 325)) button_states[0] = 1; else button_states[0] = 0;
+			if ((mx > 100 && mx < 370) && (my > 304 && my < 364)) button_states[1] = 1; else button_states[1] = 0;
+			if ((mx > 100 && mx < 370) && (my > 242 && my < 302)) button_states[2] = 1; else button_states[2] = 0;
+			if ((mx > 100 && mx < 370) && (my > 180 && my < 240)) button_states[3] = 1; else button_states[3] = 0;
+			if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) button_states[4] = 1; else button_states[4] = 0;
+			if ((mx > 830 && mx < 890) && (my > 10 && my < 70)) button_states[5] = 1; else button_states[5] = 0;
 			break;
 
 		case 4:
-			if ((mx > 395 && mx < 497) && (my > 75 && my < 100)) back_button_story = 1; else back_button_story = 0;
+			if ((mx > 395 && mx < 497) && (my > 75 && my < 100)) button_states[0] = 1; else button_states[0] = 0;
 			break;
 
 		default:
@@ -63,7 +63,7 @@ void iMouseMove(int mx, int my) {
 
 //mouse drag and move
 void iMouseDrag(int mx, int my) {
-    // place your codes here
+  // place your codes here
 }
 
 /*
@@ -75,16 +75,16 @@ void iMouse(int button, int state, int mx, int my)
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 			switch (current_screen) {
 				case 0:
-					if (play_button) play_button = 2;
-					if (story_button) story_button = 2;
-					if (settings_button) settings_button = 2;
-					if (leaderboard_button) leaderboard_button = 2;
-					if (exit_button) exit_button = 2;
-					if (help_button) help_button = 2;
+					if (button_states[0]) button_states[0] = 2;
+					if (button_states[1]) button_states[1] = 2;
+					if (button_states[2]) button_states[2] = 2;
+					if (button_states[3]) button_states[3] = 2;
+					if (button_states[4]) button_states[4] = 2;
+					if (button_states[5]) button_states[5] = 2;
 					break;
 
 				case 4:
-					if (back_button_story) back_button_story = 2;
+					if (button_states[0]) button_states[0] = 2;
 					break;
 
 				case 100:
@@ -97,38 +97,38 @@ void iMouse(int button, int state, int mx, int my)
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
 			switch (current_screen) {
 				case 0:
-					if (play_button) {
-						play_button = 0;
+					if (button_states[0]) {
+						button_states[0] = 0;
 						button_sound = 0;
 					}
-					if (settings_button) {
+					if (button_states[1]) {
 						current_screen = 100;
-						settings_button = 0;
+						button_states[1] = 0;
 						button_sound = 0;
 					}
-					if (leaderboard_button) {
+					if (button_states[2]) {
 						current_screen = 100;
-						leaderboard_button = 0;
+						button_states[2] = 0;
 						button_sound = 0;
 					}
-					if (story_button) {
+					if (button_states[3]) {
 						current_screen = 4;
-						story_button = 0;
+						button_states[3] = 0;
 						button_sound = 0;
 					}
-					if (exit_button) exit(0);
-					if (help_button) {
+					if (button_states[4]) {
 						current_screen = 0;
-						help_button = 0;
+						button_states[4] = 0;
 						button_sound = 0;
 					}
+					if (button_states[5]) exit(0);
 					
 					break;
 
 				case 4:
-					if (back_button_story) {
+					if (button_states[0]) {
 						current_screen = 0;
-						back_button_story = 0;
+						button_states[0] = 0;
 						button_sound = 0;
 					}
 					break;
@@ -206,16 +206,16 @@ void startScreen() { //screen index 0
 	iShowImage(218, 475, "assets/logo-2.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
-	// switch (play_button) {
-	// 	case 0: iShowImage(100, 304, "assets/buttons/play_button.png"); break;
-	// 	case 1: iShowImage(100, 304, "assets/buttons/play_button_hover.png"); break;
-	// 	case 2: iShowImage(100, 304, "assets/buttons/play_button_pressed.png");
-	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-	// 		button_sound = 1;
-	// 		break;
-	// }
+	switch (button_states[0]) {
+		case 0: iShowImage(600, 225, "assets/buttons/play_button.png"); break;
+		case 1: iShowImage(600, 225, "assets/buttons/play_button_hover.png"); break;
+		case 2: iShowImage(600, 225, "assets/buttons/play_button_pressed.png");
+			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+			button_sound = 1;
+			break;
+	}
 
-	switch (settings_button) {
+	switch (button_states[1]) {
 		case 0: iShowImage(100, 304, "assets/buttons/settings_button.png"); break;
 		case 1: iShowImage(100, 304, "assets/buttons/settings_button_hover.png"); break;
 		case 2: iShowImage(100, 304, "assets/buttons/settings_button_pressed.png");
@@ -224,7 +224,7 @@ void startScreen() { //screen index 0
 			break;
 	}
 
-	switch (leaderboard_button) {
+	switch (button_states[2]) {
 		case 0: iShowImage(100, 242, "assets/buttons/leaderboard_button.png"); break;
 		case 1: iShowImage(100, 242, "assets/buttons/leaderboard_button_hover.png"); break;
 		case 2: iShowImage(100, 242, "assets/buttons/leaderboard_button_pressed.png");
@@ -233,7 +233,7 @@ void startScreen() { //screen index 0
 			break;
 	}
 
-	switch (story_button) {
+	switch (button_states[3]) {
 		case 0: iShowImage(100, 180, "assets/buttons/story_button.png"); break;
 		case 1: iShowImage(100, 180, "assets/buttons/story_button_hover.png"); break;
 		case 2: iShowImage(100, 180, "assets/buttons/story_button_pressed.png");
@@ -241,29 +241,20 @@ void startScreen() { //screen index 0
 			button_sound = 1;
 			break;
 	}
-
-	switch (story_button) {
-		case 0: iShowImage(500, 300, "assets/buttons/play_button.png"); break;
-		case 1: iShowImage(500, 300, "assets/buttons/play_button_hover.png"); break;
-		case 2: iShowImage(500, 300, "assets/buttons/play_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
-
-	switch (exit_button) {
-		case 0: iShowImage(830, 10, "assets/buttons/exit_button.png"); break;
-		case 1: iShowImage(830, 10, "assets/buttons/exit_button_hover.png"); break;
-		case 2: iShowImage(830, 10, "assets/buttons/exit_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
 	
-	switch (help_button) {
+	switch (button_states[4]) {
 		case 0: iShowImage(765, 10, "assets/buttons/help_button.png"); break;
 		case 1: iShowImage(765, 10, "assets/buttons/help_button_hover.png"); break;
 		case 2: iShowImage(765, 10, "assets/buttons/help_button_pressed.png");
+			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+			button_sound = 1;
+			break;
+	}
+
+	switch (button_states[5]) {
+		case 0: iShowImage(830, 10, "assets/buttons/exit_button.png"); break;
+		case 1: iShowImage(830, 10, "assets/buttons/exit_button_hover.png"); break;
+		case 2: iShowImage(830, 10, "assets/buttons/exit_button_pressed.png");
 			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			button_sound = 1;
 			break;
@@ -272,7 +263,7 @@ void startScreen() { //screen index 0
 
 void storyScreen() { //screen index 4
 	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
-	switch (back_button_story) {
+	switch (button_states[0]) {
 		case 0:
 		case 1: iShowImage(400, 80, "assets/texts/back.png"); break;
 		case 2: iShowImage(400, 80, "assets/texts/back.png");

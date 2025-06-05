@@ -1,0 +1,24 @@
+/**************/
+/* screens_id */
+/**************/
+
+Start Screen - 0
+Story Screen - 4
+Under Construction - 100
+
+/******************/
+/* buttons_states */  Indices in the array
+/******************/
+
+//start_screen
+	Play - 0
+	Settings - 1
+	Leaderboard - 2
+	Story - 3
+	Instructions - 4
+	Exit = 5
+
+//story_screen
+	Back = 0
+
+	Keyboard 'Esc'
