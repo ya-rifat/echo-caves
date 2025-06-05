@@ -242,6 +242,15 @@ void startScreen() { //screen index 0
 			break;
 	}
 
+	switch (story_button) {
+		case 0: iShowImage(500, 300, "assets/buttons/play_button.png"); break;
+		case 1: iShowImage(500, 300, "assets/buttons/play_button_hover.png"); break;
+		case 2: iShowImage(500, 300, "assets/buttons/play_button_pressed.png");
+			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+			button_sound = 1;
+			break;
+	}
+
 	switch (exit_button) {
 		case 0: iShowImage(830, 10, "assets/buttons/exit_button.png"); break;
 		case 1: iShowImage(830, 10, "assets/buttons/exit_button_hover.png"); break;
