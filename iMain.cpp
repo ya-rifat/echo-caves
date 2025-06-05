@@ -44,10 +44,10 @@ void iDraw()
 void iMouseMove(int mx, int my) {
 	switch (current_screen) {
 		case 0:
-			if ((mx > 600 && mx < 700) && (my > 225 && my < 325)) button_states[0] = 1; else button_states[0] = 0;
-			if ((mx > 100 && mx < 370) && (my > 304 && my < 364)) button_states[1] = 1; else button_states[1] = 0;
-			if ((mx > 100 && mx < 370) && (my > 242 && my < 302)) button_states[2] = 1; else button_states[2] = 0;
-			if ((mx > 100 && mx < 370) && (my > 180 && my < 240)) button_states[3] = 1; else button_states[3] = 0;
+			if ((mx > 600 && mx < 700) && (my > 205 && my < 305)) button_states[0] = 1; else button_states[0] = 0;
+			if ((mx > 100 && mx < 370) && (my > 284 && my < 344)) button_states[1] = 1; else button_states[1] = 0;
+			if ((mx > 100 && mx < 370) && (my > 222 && my < 282)) button_states[2] = 1; else button_states[2] = 0;
+			if ((mx > 100 && mx < 370) && (my > 160 && my < 220)) button_states[3] = 1; else button_states[3] = 0;
 			if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) button_states[4] = 1; else button_states[4] = 0;
 			if ((mx > 830 && mx < 890) && (my > 10 && my < 70)) button_states[5] = 1; else button_states[5] = 0;
 			break;
@@ -203,40 +203,40 @@ int main(int argc, char *argv[])
 
 
 void startScreen() { //screen index 0
-	iShowImage(218, 475, "assets/logo-2.png");
+	iShowImage(182, 450, "assets/logo.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
 	switch (button_states[0]) {
-		case 0: iShowImage(600, 225, "assets/buttons/play_button.png"); break;
-		case 1: iShowImage(600, 225, "assets/buttons/play_button_hover.png"); break;
-		case 2: iShowImage(600, 225, "assets/buttons/play_button_pressed.png");
+		case 0: iShowImage(600, 205, "assets/buttons/play_button.png"); break;
+		case 1: iShowImage(600, 205, "assets/buttons/play_button_hover.png"); break;
+		case 2: iShowImage(600, 205, "assets/buttons/play_button_pressed.png");
 			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			button_sound = 1;
 			break;
 	}
 
 	switch (button_states[1]) {
-		case 0: iShowImage(100, 304, "assets/buttons/settings_button.png"); break;
-		case 1: iShowImage(100, 304, "assets/buttons/settings_button_hover.png"); break;
-		case 2: iShowImage(100, 304, "assets/buttons/settings_button_pressed.png");
+		case 0: iShowImage(100, 284, "assets/buttons/settings_button.png"); break;
+		case 1: iShowImage(100, 284, "assets/buttons/settings_button_hover.png"); break;
+		case 2: iShowImage(100, 284, "assets/buttons/settings_button_pressed.png");
 			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			button_sound = 1;
 			break;
 	}
 
 	switch (button_states[2]) {
-		case 0: iShowImage(100, 242, "assets/buttons/leaderboard_button.png"); break;
-		case 1: iShowImage(100, 242, "assets/buttons/leaderboard_button_hover.png"); break;
-		case 2: iShowImage(100, 242, "assets/buttons/leaderboard_button_pressed.png");
+		case 0: iShowImage(100, 222, "assets/buttons/leaderboard_button.png"); break;
+		case 1: iShowImage(100, 222, "assets/buttons/leaderboard_button_hover.png"); break;
+		case 2: iShowImage(100, 222, "assets/buttons/leaderboard_button_pressed.png");
 			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			button_sound = 1;
 			break;
 	}
 
 	switch (button_states[3]) {
-		case 0: iShowImage(100, 180, "assets/buttons/story_button.png"); break;
-		case 1: iShowImage(100, 180, "assets/buttons/story_button_hover.png"); break;
-		case 2: iShowImage(100, 180, "assets/buttons/story_button_pressed.png");
+		case 0: iShowImage(100, 160, "assets/buttons/story_button.png"); break;
+		case 1: iShowImage(100, 160, "assets/buttons/story_button_hover.png"); break;
+		case 2: iShowImage(100, 160, "assets/buttons/story_button_pressed.png");
 			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
 			button_sound = 1;
 			break;
