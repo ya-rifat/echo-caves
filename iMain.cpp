@@ -12,7 +12,7 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
 void custom_iMouse(int is_called, int button, int state);
 
 //test
-int mouse_x, mouse_y, mouse_button, mouse_button_state;
+int mouse_x, mouse_y, mouse_button = -1, mouse_button_state = 1;
 
 //button states
 int button_states[max_buttons] = {0}; //one array for all buttons states
@@ -82,6 +82,12 @@ void iMouse(int button, int state, int mx, int my)
 {
   mouse_button = button;
   mouse_button_state = state;
+
+  if (state == GLUT_UP) {
+    mouse_button = -1;
+    mouse_button_state = -1;
+  }
+  
 
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 			switch (current_screen) {
@@ -325,9 +331,9 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
     state = 1;
 
     if (mouse_button == GLUT_LEFT_BUTTON && mouse_button_state == GLUT_DOWN) state = 2;
-    else if (mouse_button == GLUT_LEFT_BUTTON && mouse_button_state == GLUT_UP) {
-      state = 0;
+    else if (mouse_button == -1 && mouse_button_state == -1) {
       button_sound =  0;
+      current_screen = 100;
     }
   } else state = 0;
 
