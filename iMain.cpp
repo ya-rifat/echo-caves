@@ -13,6 +13,7 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
 //mouse_events
 int mouse_x, mouse_y;
 int is_state_down = 0, is_state_up = 0, is_left_button = 0;
+int button_click; //button click detector
 
 //button states
 int button_states[max_buttons] = {0}; //one array for all buttons states
@@ -55,11 +56,11 @@ void iMouseMove(int mx, int my) {
   mouse_y = my;
 	switch (current_screen) {
 		case 0:
-			if ((mx > 600 && mx < 700) && (my > 205 && my < 305)) button_states[0] = 1; else button_states[0] = 0;
-			if ((mx > 100 && mx < 370) && (my > 284 && my < 344)) button_states[1] = 1; else button_states[1] = 0;
-			if ((mx > 100 && mx < 370) && (my > 222 && my < 282)) button_states[2] = 1; else button_states[2] = 0;
-			if ((mx > 100 && mx < 370) && (my > 160 && my < 220)) button_states[3] = 1; else button_states[3] = 0;
-			if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) button_states[4] = 1; else button_states[4] = 0;
+			// if ((mx > 600 && mx < 700) && (my > 205 && my < 305)) button_states[0] = 1; else button_states[0] = 0;
+			// if ((mx > 100 && mx < 370) && (my > 284 && my < 344)) button_states[1] = 1; else button_states[1] = 0;
+			// if ((mx > 100 && mx < 370) && (my > 222 && my < 282)) button_states[2] = 1; else button_states[2] = 0;
+			// if ((mx > 100 && mx < 370) && (my > 160 && my < 220)) button_states[3] = 1; else button_states[3] = 0;
+			// if ((mx > 765 && mx < 825) && (my > 10 && my < 70)) button_states[4] = 1; else button_states[4] = 0;
 			if ((mx > 830 && mx < 890) && (my > 10 && my < 70)) button_states[5] = 1; else button_states[5] = 0;
 			break;
 
@@ -87,15 +88,21 @@ void iMouse(int button, int state, int mx, int my)
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
   
-
+  if (button_click == 0 && state == GLUT_UP) {
+    is_state_down = 0;
+    is_state_up = 0;
+    is_left_button = 0;
+  }
+  
+  
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 			switch (current_screen) {
 				case 0:
-					if (button_states[0]) button_states[0] = 2;
-					if (button_states[1]) button_states[1] = 2;
-					if (button_states[2]) button_states[2] = 2;
-					if (button_states[3]) button_states[3] = 2;
-					if (button_states[4]) button_states[4] = 2;
+					// if (button_states[0]) button_states[0] = 2;
+					// if (button_states[1]) button_states[1] = 2;
+					// if (button_states[2]) button_states[2] = 2;
+					// if (button_states[3]) button_states[3] = 2;
+					// if (button_states[4]) button_states[4] = 2;
 					if (button_states[5]) button_states[5] = 2;
 					break;
 
@@ -113,30 +120,30 @@ void iMouse(int button, int state, int mx, int my)
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
 			switch (current_screen) {
 				case 0:
-					if (button_states[0]) {
-						button_states[0] = 0;
-						button_sound = 0;
-					}
-					if (button_states[1]) {
-						current_screen = 100;
-						button_states[1] = 0;
-						button_sound = 0;
-					}
-					if (button_states[2]) {
-						current_screen = 100;
-						button_states[2] = 0;
-						button_sound = 0;
-					}
-					if (button_states[3]) {
-						current_screen = 4;
-						button_states[3] = 0;
-						button_sound = 0;
-					}
-					if (button_states[4]) {
-						current_screen = 0;
-						button_states[4] = 0;
-						button_sound = 0;
-					}
+					// if (button_states[0]) {
+					// 	button_states[0] = 0;
+					// 	button_sound = 0;
+					// }
+					// if (button_states[1]) {
+					// 	current_screen = 100;
+					// 	button_states[1] = 0;
+					// 	button_sound = 0;
+					// }
+					// if (button_states[2]) {
+					// 	current_screen = 100;
+					// 	button_states[2] = 0;
+					// 	button_sound = 0;
+					// }
+					// if (button_states[3]) {
+					// 	current_screen = 4;
+					// 	button_states[3] = 0;
+					// 	button_sound = 0;
+					// }
+					// if (button_states[4]) {
+					// 	current_screen = 0;
+					// 	button_states[4] = 0;
+					// 	button_sound = 0;
+					// }
 					if (button_states[5]) exit(0);
 					
 					break;
@@ -228,60 +235,60 @@ void startScreen() { //screen index 0
 	iShowImage(182, 450, "assets/logo.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
-	switch (button_states[0]) {
-		case 0: iShowImage(600, 205, "assets/buttons/play_button.png"); break;
-		case 1: iShowImage(600, 205, "assets/buttons/play_button_hover.png"); break;
-		case 2: iShowImage(600, 205, "assets/buttons/play_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
+	// switch (button_states[0]) {
+	// 	case 0: iShowImage(600, 205, "assets/buttons/play_button.png"); break;
+	// 	case 1: iShowImage(600, 205, "assets/buttons/play_button_hover.png"); break;
+	// 	case 2: iShowImage(600, 205, "assets/buttons/play_button_pressed.png");
+	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+	// 		button_sound = 1;
+	// 		break;
+	// }
 
-  // button("play_button", 600, 205, 100, 100, &current_screen, 100);
+  button("play_button", 600, 205, 100, 100, &current_screen, 100);
 
-	switch (button_states[1]) {
-		case 0: iShowImage(100, 284, "assets/buttons/settings_button.png"); break;
-		case 1: iShowImage(100, 284, "assets/buttons/settings_button_hover.png"); break;
-		case 2: iShowImage(100, 284, "assets/buttons/settings_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
+	// switch (button_states[1]) {
+	// 	case 0: iShowImage(100, 284, "assets/buttons/settings_button.png"); break;
+	// 	case 1: iShowImage(100, 284, "assets/buttons/settings_button_hover.png"); break;
+	// 	case 2: iShowImage(100, 284, "assets/buttons/settings_button_pressed.png");
+	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+	// 		button_sound = 1;
+	// 		break;
+	// }
 
-  // button("settings_button", 100, 284, 270, 60, &current_screen, 100);
+  button("settings_button", 100, 284, 270, 60, &current_screen, 100);
 
-	switch (button_states[2]) {
-		case 0: iShowImage(100, 222, "assets/buttons/leaderboard_button.png"); break;
-		case 1: iShowImage(100, 222, "assets/buttons/leaderboard_button_hover.png"); break;
-		case 2: iShowImage(100, 222, "assets/buttons/leaderboard_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
+	// switch (button_states[2]) {
+	// 	case 0: iShowImage(100, 222, "assets/buttons/leaderboard_button.png"); break;
+	// 	case 1: iShowImage(100, 222, "assets/buttons/leaderboard_button_hover.png"); break;
+	// 	case 2: iShowImage(100, 222, "assets/buttons/leaderboard_button_pressed.png");
+	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+	// 		button_sound = 1;
+	// 		break;
+	// }
 
-  // button("leaderboard_button", 100, 222, 270, 60, &current_screen, 100);
+  button("leaderboard_button", 100, 222, 270, 60, &current_screen, 100);
 
-	switch (button_states[3]) {
-		case 0: iShowImage(100, 160, "assets/buttons/story_button.png"); break;
-		case 1: iShowImage(100, 160, "assets/buttons/story_button_hover.png"); break;
-		case 2: iShowImage(100, 160, "assets/buttons/story_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
+	// switch (button_states[3]) {
+	// 	case 0: iShowImage(100, 160, "assets/buttons/story_button.png"); break;
+	// 	case 1: iShowImage(100, 160, "assets/buttons/story_button_hover.png"); break;
+	// 	case 2: iShowImage(100, 160, "assets/buttons/story_button_pressed.png");
+	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+	// 		button_sound = 1;
+	// 		break;
+	// }
 
-  // button("story_button", 100, 160, 270, 60, &current_screen, 4);
+  button("story_button", 100, 160, 270, 60, &current_screen, 4);
 	
-	switch (button_states[4]) {
-		case 0: iShowImage(765, 10, "assets/buttons/help_button.png"); break;
-		case 1: iShowImage(765, 10, "assets/buttons/help_button_hover.png"); break;
-		case 2: iShowImage(765, 10, "assets/buttons/help_button_pressed.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
+	// switch (button_states[4]) {
+	// 	case 0: iShowImage(765, 10, "assets/buttons/help_button.png"); break;
+	// 	case 1: iShowImage(765, 10, "assets/buttons/help_button_hover.png"); break;
+	// 	case 2: iShowImage(765, 10, "assets/buttons/help_button_pressed.png");
+	// 		if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+	// 		button_sound = 1;
+	// 		break;
+	// }
 
-  // button("help_button", 765, 10, 60, 60, &current_screen, 0);
+  button("help_button", 765, 10, 60, 60, &current_screen, 0);
 
 	switch (button_states[5]) {
 		case 0: iShowImage(830, 10, "assets/buttons/exit_button.png"); break;
@@ -328,15 +335,17 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
   if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
     state = 1;
 
-    if (is_left_button && is_state_down) state = 2;
-    else if (is_left_button && is_state_up) {
-      if (var_value == -1) exit(0);
-      *var_name = var_value;
-      button_sound =  0;
-  
-      is_state_up = 0;
-      is_state_down = 0;
-      is_left_button = 0;
+    if (is_left_button) {
+      if (is_state_down) {
+        state = 2;
+        button_click = 1;
+      } else if (is_state_up) {
+        *var_name = var_value;
+        button_sound =  0;
+    
+        is_state_up = 0;
+        button_click = 0;
+      }
     }
   } else state = 0;
 
