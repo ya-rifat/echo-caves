@@ -1,5 +1,6 @@
 #include "iGraphics.h"
 #include "iSound.h"
+#include <string.h>
 
 #define max_buttons 50 //in one screen
 
@@ -7,6 +8,11 @@
 void startScreen();
 void storyScreen();
 void underConstruction();
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height);
+void custom_iMouse(int is_called, int button, int state);
+
+//test
+int mouse_x, mouse_y, mouse_button, mouse_button_state;
 
 //button states
 int button_states[max_buttons] = {0}; //one array for all buttons states
@@ -42,6 +48,8 @@ void iDraw()
 
 //mouse move
 void iMouseMove(int mx, int my) {
+  mouse_x = mx;
+  mouse_y = my;
 	switch (current_screen) {
 		case 0:
 			if ((mx > 600 && mx < 700) && (my > 205 && my < 305)) button_states[0] = 1; else button_states[0] = 0;
@@ -72,6 +80,9 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
+  mouse_button = button;
+  mouse_button_state = state;
+
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 			switch (current_screen) {
 				case 0:
@@ -140,6 +151,12 @@ void iMouse(int button, int state, int mx, int my)
 					break;
 			}
     }
+
+    // if ((button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) || (button == GLUT_LEFT_BUTTON && state == GLUT_UP))
+    //   custom_iMouse(1, button, state);
+    // else
+    //   custom_iMouse(0, button, state);
+    
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
         // place your codes here
     }
@@ -215,6 +232,8 @@ void startScreen() { //screen index 0
 			break;
 	}
 
+  // button("play_button", 400, 95, 100, 100);
+
 	switch (button_states[1]) {
 		case 0: iShowImage(100, 284, "assets/buttons/settings_button.png"); break;
 		case 1: iShowImage(100, 284, "assets/buttons/settings_button_hover.png"); break;
@@ -274,6 +293,66 @@ void storyScreen() { //screen index 4
 	iShowImage(98, 200, "assets/texts/story.png");
 }
 
+void game_screen() {
+
+}
+
 void underConstruction() { //screen index 100
 	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
+}
+
+/**
+ * components
+ */
+
+void custom_iMouse(int is_called, int button, int state) {
+  if (is_called) {
+    mouse_button = button;
+    mouse_button_state = state;
+  } else {
+    mouse_button = -1;
+    mouse_button_state = -1;
+  }
+}
+
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height) { //max length of texture path is 200
+  int state;
+  char path[200] = "assets/buttons/";
+  strcat(path, texture_name);
+  char texture[200];
+
+  if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
+    state = 1;
+
+    if (mouse_button == GLUT_LEFT_BUTTON && mouse_button_state == GLUT_DOWN) state = 2;
+    else if (mouse_button == GLUT_LEFT_BUTTON && mouse_button_state == GLUT_UP) {
+      state = 0;
+      button_sound =  0;
+    }
+  } else state = 0;
+
+  switch (state) {
+    case 0:
+      strcpy(texture, path);
+      strcat(texture, ".png");
+      iShowImage(pos_x, pos_y, texture);
+      break;
+
+    case 1:
+      strcpy(texture, path);
+      strcat(texture, "_hover.png");
+      iShowImage(pos_x, pos_y, texture);
+      break;
+
+    case 2:
+      strcpy(texture, path);
+      strcat(texture, "_pressed.png");
+      iShowImage(pos_x, pos_y, texture);
+			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
+			button_sound = 1;
+      break;
+    
+    default:
+      break;
+  }
 }
