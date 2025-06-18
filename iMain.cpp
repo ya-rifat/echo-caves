@@ -2,8 +2,6 @@
 #include "iSound.h"
 #include <string.h>
 
-#define max_buttons 50 //in one screen
-
 //function declarations
 /* Screens */
 void startScreen();
@@ -11,18 +9,19 @@ void storyScreen();
 void underConstruction();
 
 /* Components */
-void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1);
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 
-//mouse events
+//mouse actions
 int mouse_x = 0, mouse_y = 0;
 int is_state_down = 0, is_state_up = 0, is_left_button = 0;
+
 int button_click; //button click detector
 
 //screen tracker
 int current_screen;
 
-//sound channels
-int button_sound; //not really a sound channel
+//for sound control
+int button_sound;
 
 //trash
 int int_trash;
@@ -52,9 +51,7 @@ void iMouseMove(int mx, int my) {
 }
 
 //mouse drag and move
-void iMouseDrag(int mx, int my) {
-
-}
+void iMouseDrag(int mx, int my) {}
 
 void iMouse(int button, int state, int mx, int my)
 {
@@ -70,11 +67,9 @@ void iMouse(int button, int state, int mx, int my)
 }
 
 /*
-dir = 1 for up, -1 for down.
-*/
-void iMouseWheel(int dir, int mx, int my) {
-
-}
+ * dir = 1 for up, -1 for down.
+ */
+void iMouseWheel(int dir, int mx, int my) {}
 
 void iKeyboard(unsigned char key) {
 	switch (key) {
@@ -88,22 +83,13 @@ void iKeyboard(unsigned char key) {
 }
 
 /*
-GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
-GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11,
-GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
-GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
-GLUT_KEY_INSERT
-*/
-void iSpecialKeyboard(unsigned char key) {
-	switch (key) {
-		case GLUT_KEY_END:
-			
-			break;
-
-		default:
-			break;
-	}
-}
+ * GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
+ * GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11,
+ * GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
+ * GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
+ * GLUT_KEY_INSERT
+ */
+void iSpecialKeyboard(unsigned char key) {}
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
@@ -129,7 +115,7 @@ void startScreen() { //index 0
   button("settings_button", 100, 284, 270, 60, &current_screen, 100);
   button("leaderboard_button", 100, 222, 270, 60, &current_screen, 100);
   button("story_button", 100, 160, 270, 60, &current_screen, 4);
-  button("help_button", 765, 10, 60, 60, &current_screen, 0, 0);
+  button("help_button", 765, 10, 60, 60, &current_screen, 0);
 
   int is_exit_pressed;
   button("exit_button", 830, 10, 60, 60, &is_exit_pressed, 1);
@@ -157,16 +143,17 @@ void underConstruction() { //screen index 100
  * components
  */
 
-void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state) { //max length of texture path is 200
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state, int make_sound) { //max length of texture path is 200
   
-  /** Notes before using
+  /* Notes before using
    * Button texture must be in assets/buttons folder
-   * if button does not have hover and pressed state set has_state parameter to 0
-   * if button name is given "abc" for example, 
+   * if button does not have hover and pressed state set has_state parameter to 0, e.g back button in story_screen
+   * if button name is given "abc" for example,
    * default texture name must be abc.png
    * hover texture name must be abc_hover.png
    * pressed texture name must be abc_pressed.png
    * put texture width and height in width and height parameter
+   * if you do not want button to make sound set make_sound param to 0
    */
 
   int state;
@@ -199,23 +186,20 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
       strcat(texture, ".png");
       iShowImage(pos_x, pos_y, texture);
       break;
-
     case 1:
       strcpy(texture, path);
       strcat(texture, has_state ? "_hover.png" : ".png");
       iShowImage(pos_x, pos_y, texture);
       break;
-
     case 2:
       strcpy(texture, path);
       strcat(texture, has_state ? "_pressed.png" : ".png");
       iShowImage(pos_x, pos_y, texture);
-			if (!button_sound) {
+			if (!button_sound && make_sound) {
         iPlaySound("assets/sounds/button_click.wav", false, 80);
         button_sound = 1;
       }
       break;
-    
     default:
       break;
   }
