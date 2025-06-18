@@ -126,7 +126,7 @@ void startScreen() { //index 0
 //the most important screen
 /*** HIGHLIGHTED ***/
 void game_screen() {
-	iShowImage(0,0)
+	
 }
 
 void storyScreen() { //index 4
