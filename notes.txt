@@ -7,7 +7,7 @@ Story Screen - 4
 Under Construction - 100
 
 /******************/
-/* buttons_states */  Indices in the array
+/* buttons_states */  Indices in the array - Not required anymore
 /******************/
 
 //start_screen

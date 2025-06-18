@@ -5,46 +5,41 @@
 #define max_buttons 50 //in one screen
 
 //function declarations
+/* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
-void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value);
+
+/* Components */
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1);
 
 //mouse events
 int mouse_x = 0, mouse_y = 0;
 int is_state_down = 0, is_state_up = 0, is_left_button = 0;
 int button_click; //button click detector
 
-//button states
-int button_states[max_buttons] = {0}; //one array for all buttons states
-
 //screen tracker
 int current_screen;
 
 //sound channels
-//start screen
-int button_sound;
+int button_sound; //not really a sound channel
 
 //trash
 int int_trash;
 
-void iDraw()
-{
+void iDraw() {
 	iClear();
 
 	switch (current_screen) {
 		case 0:
 			startScreen();
 			break;
-
 		case 4:
 			storyScreen();
 			break;
-		
 		case 100:
 			underConstruction();
 			break;
-
 		default:
 			break;
 	}
@@ -54,93 +49,34 @@ void iDraw()
 void iMouseMove(int mx, int my) {
   mouse_x = mx;
   mouse_y = my;
-	switch (current_screen) {
-		case 0:
-			break;
-
-		case 4:
-			if ((mx > 395 && mx < 497) && (my > 75 && my < 100)) button_states[0] = 1; else button_states[0] = 0;
-			break;
-
-		default:
-			break;
-	}
 }
 
 //mouse drag and move
 void iMouseDrag(int mx, int my) {
-  // place your codes here
+
 }
 
-/*
-function iMouse() is called when the user presses/releases the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouse(int button, int state, int mx, int my)
 {
   is_state_down = state == GLUT_DOWN;
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
   
-  if (button_click == 0 && state == GLUT_UP) {
+  if (button_click == 0 && state == GLUT_UP) { //reset
     is_state_down = 0;
     is_state_up = 0;
     is_left_button = 0;
   }
-  
-  
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-			switch (current_screen) {
-				case 0:
-					break;
-
-				case 4:
-					if (button_states[0]) button_states[0] = 2;
-					break;
-
-				case 100:
-					break;
-				
-				default:
-					break;
-			}
-    }
-		if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
-			switch (current_screen) {
-				case 0:
-					break;
-
-				case 4:
-					if (button_states[0]) {
-						current_screen = 0;
-						button_states[0] = 0;
-						button_sound = 0;
-					}
-					break;
-
-				case 100:
-					break;
-				
-				default:
-					break;
-			}
-    }
-    
-    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
-        // place your codes here
-    }
 }
 
 /*
 dir = 1 for up, -1 for down.
 */
-void iMouseWheel(int dir, int mx, int my)
-{
-  // place your code here
+void iMouseWheel(int dir, int mx, int my) {
+
 }
 
-void iKeyboard(unsigned char key)
-{
+void iKeyboard(unsigned char key) {
 	switch (key) {
     case 'q':
 			current_screen = 0;
@@ -148,7 +84,7 @@ void iKeyboard(unsigned char key)
 			
     default:
 			break;
-    }
+  }
 }
 
 /*
@@ -158,11 +94,10 @@ GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
 GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
 GLUT_KEY_INSERT
 */
-void iSpecialKeyboard(unsigned char key)
-{
+void iSpecialKeyboard(unsigned char key) {
 	switch (key) {
 		case GLUT_KEY_END:
-			// do something
+			
 			break;
 
 		default:
@@ -170,8 +105,7 @@ void iSpecialKeyboard(unsigned char key)
 	}
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	current_screen = 0;
 	iInitializeSound();
@@ -187,8 +121,7 @@ int main(int argc, char *argv[])
  * Declare them on top first
  */
 
-
-void startScreen() { //screen index 0
+void startScreen() { //index 0
 	iShowImage(182, 450, "assets/logo.png");
 	iShowImage(10, 10, "assets/texts/version.png");
 
@@ -196,30 +129,25 @@ void startScreen() { //screen index 0
   button("settings_button", 100, 284, 270, 60, &current_screen, 100);
   button("leaderboard_button", 100, 222, 270, 60, &current_screen, 100);
   button("story_button", 100, 160, 270, 60, &current_screen, 4);
-  button("help_button", 765, 10, 60, 60, &current_screen, 0);
+  button("help_button", 765, 10, 60, 60, &current_screen, 0, 0);
 
   int is_exit_pressed;
   button("exit_button", 830, 10, 60, 60, &is_exit_pressed, 1);
   if (is_exit_pressed) exit(0);
 }
 
-void storyScreen() { //screen index 4
-	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
-	switch (button_states[0]) {
-		case 0:
-		case 1: iShowImage(400, 80, "assets/texts/back.png"); break;
-		case 2: iShowImage(400, 80, "assets/texts/back.png");
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
-			break;
-	}
-	iShowImage(98, 200, "assets/texts/story.png");
-}
-
-
+//the most important screen
+/*** HIGHLIGHTED ***/
 void game_screen() {
 
 }
+
+void storyScreen() { //index 4
+	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
+  button("back", 390, 70, 102, 25, &current_screen, 0, 0);
+	iShowImage(98, 200, "assets/texts/story.png");
+}
+
 
 void underConstruction() { //screen index 100
 	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
@@ -229,7 +157,18 @@ void underConstruction() { //screen index 100
  * components
  */
 
-void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value) { //max length of texture path is 200
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state) { //max length of texture path is 200
+  
+  /** Notes before using
+   * Button texture must be in assets/buttons folder
+   * if button does not have hover and pressed state set has_state parameter to 0
+   * if button name is given "abc" for example, 
+   * default texture name must be abc.png
+   * hover texture name must be abc_hover.png
+   * pressed texture name must be abc_pressed.png
+   * put texture width and height in width and height parameter
+   */
+
   int state;
   char path[200] = "assets/buttons/";
   strcat(path, texture_name);
@@ -245,11 +184,11 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
       } else if (is_state_up) {
         *var_name = var_value;
         button_sound =  0;
+        button_click = 0;
 
         is_state_up = 0;
         is_state_down = 0;
         is_left_button = 0;
-        button_click = 0;
       }
     }
   } else state = 0;
@@ -263,16 +202,18 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
 
     case 1:
       strcpy(texture, path);
-      strcat(texture, "_hover.png");
+      strcat(texture, has_state ? "_hover.png" : ".png");
       iShowImage(pos_x, pos_y, texture);
       break;
 
     case 2:
       strcpy(texture, path);
-      strcat(texture, "_pressed.png");
+      strcat(texture, has_state ? "_pressed.png" : ".png");
       iShowImage(pos_x, pos_y, texture);
-			if (!button_sound) iPlaySound("assets/sounds/button_click.wav", false, 80);
-			button_sound = 1;
+			if (!button_sound) {
+        iPlaySound("assets/sounds/button_click.wav", false, 80);
+        button_sound = 1;
+      }
       break;
     
     default:
