@@ -106,15 +106,16 @@ int main(int argc, char *argv[]) {
  * 
  * Declare them on top first
  */
-
+// Image backgroundImage;
+// iloadImage(&backgroundImage, "assets")
 void startScreen() { //index 0
-	iShowImage(182, 450, "assets/logo.png");
-	iShowImage(10, 10, "assets/texts/version.png");
+	iShowImage(0,0, "assets/backgrounds/GAME_BG.jpg");
+	iShowImage(5, 5, "assets/texts/version.png");
 
-  button("play_button", 600, 205, 100, 100, &current_screen, 100);
-  button("settings_button", 100, 284, 270, 60, &current_screen, 100);
-  button("leaderboard_button", 100, 222, 270, 60, &current_screen, 100);
-  button("story_button", 100, 160, 270, 60, &current_screen, 4);
+  button("play_button", 610, 320, 100, 100, &current_screen, 100);
+  button("settings_button", 530, 254, 270, 60, &current_screen, 100);
+  button("leaderboard_button", 530, 192, 270, 60, &current_screen, 100);
+  button("story_button", 530, 130, 270, 60, &current_screen, 4);
   button("help_button", 765, 10, 60, 60, &current_screen, 0);
 
   int is_exit_pressed;
@@ -125,12 +126,12 @@ void startScreen() { //index 0
 //the most important screen
 /*** HIGHLIGHTED ***/
 void game_screen() {
-
+	iShowImage(0,0)
 }
 
 void storyScreen() { //index 4
 	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
-  button("back", 390, 70, 102, 25, &current_screen, 0, 0);
+  	button("back", 390, 70, 102, 25, &current_screen, 0, 0);
 	iShowImage(98, 200, "assets/texts/story.png");
 }
 
