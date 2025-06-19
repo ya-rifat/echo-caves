@@ -2,11 +2,15 @@
 #include "iSound.h"
 #include <string.h>
 
+//Images
+Image reveal;
+
 //function declarations
 /* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
+void game_screen();
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
@@ -23,8 +27,9 @@ int current_screen;
 //for sound control
 int button_sound;
 
-//trash
-int int_trash;
+
+//TODO: test
+int reveal_x = -900, reveal_y = -600; //position
 
 void iDraw() {
 	iClear();
@@ -36,6 +41,9 @@ void iDraw() {
 		case 4:
 			storyScreen();
 			break;
+    case 10:
+      game_screen();
+      break;
 		case 100:
 			underConstruction();
 			break;
@@ -59,7 +67,7 @@ void iMouse(int button, int state, int mx, int my)
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
   
-  if (button_click == 0 && state == GLUT_UP) { //reset
+  if (button_click == 0 && state == GLUT_UP) { //reset button states
     is_state_down = 0;
     is_state_up = 0;
     is_left_button = 0;
@@ -89,17 +97,41 @@ void iKeyboard(unsigned char key) {
  * GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
  * GLUT_KEY_INSERT
  */
-void iSpecialKeyboard(unsigned char key) {}
+void iSpecialKeyboard(unsigned char key) {
+  switch (key) {
+    case GLUT_KEY_UP:
+      reveal_y+=5;
+      break;
+
+    case GLUT_KEY_DOWN:
+      reveal_y-=5;
+      break;
+
+    case GLUT_KEY_RIGHT:
+      reveal_x+=5;
+      break;
+
+    case GLUT_KEY_LEFT:
+      reveal_x-=5;
+      break;
+    
+    default:
+      break;
+  }
+}
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
+  
+  //Images are to be loaded only once
+  iLoadImage(&reveal, "assets/game_screen/test.png");
+
 	current_screen = 0;
 	iInitializeSound();
 	iInitialize(900, 600, "Echo Caves");
+
 	return 0;
 }
-
-
 
 /**
  * Define screens here..........
@@ -107,12 +139,13 @@ int main(int argc, char *argv[]) {
  * Declare them on top first
  */
 // Image backgroundImage;
-// iloadImage(&backgroundImage, "assets")
+// iloadImage(&backgroundImage, "assets");
+
 void startScreen() { //index 0
-	iShowImage(0,0, "assets/backgrounds/GAME_BG.jpg");
+	iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
 	iShowImage(5, 5, "assets/texts/version.png");
 
-  button("play_button", 610, 320, 100, 100, &current_screen, 100);
+  button("play_button", 610, 320, 100, 100, &current_screen, 10);
   button("settings_button", 530, 254, 270, 60, &current_screen, 100);
   button("leaderboard_button", 530, 192, 270, 60, &current_screen, 100);
   button("story_button", 530, 130, 270, 60, &current_screen, 4);
@@ -126,15 +159,19 @@ void startScreen() { //index 0
 //the most important screen
 /*** HIGHLIGHTED ***/
 void game_screen() {
-	
+	iText(10, 10, "Use arrow keys to move the revealed area");
+  iSetColor(50, 150, 50);
+  iFilledRectangle(0, 0, 450, 600);
+  iSetColor(50, 50, 150);
+  iFilledRectangle(450, 0, 450, 600);
+  iShowLoadedImage(reveal_x, reveal_y, &reveal);
 }
 
 void storyScreen() { //index 4
 	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
-  	button("back", 390, 70, 102, 25, &current_screen, 0, 0);
 	iShowImage(98, 200, "assets/texts/story.png");
+  button("back", 390, 70, 102, 25, &current_screen, 0, 0);
 }
-
 
 void underConstruction() { //screen index 100
 	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
