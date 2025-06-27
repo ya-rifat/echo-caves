@@ -3,15 +3,20 @@
 #include <string.h>
 
 //Images
-Image reveal;
-
+Image reveal, caveImage;
+Image lSide[30], front[30], back[30], rSide[30];
+Sprite lsidev, frontv, backv, rsidev;
+int changeSpirit = 1;
+int r = 0;
 //function declarations
 /* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
+void iAnim();
+void loadResources();
 void game_screen();
-
+void doFade();
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 
@@ -29,7 +34,7 @@ int button_sound;
 
 
 //TODO: test
-int reveal_x = -900, reveal_y = -600; //position
+int reveal_x = -810, reveal_y = -430; //position
 
 void iDraw() {
 	iClear();
@@ -43,6 +48,22 @@ void iDraw() {
 			break;
     case 10:
       game_screen();
+      if(changeSpirit == 0){
+        iSetSpritePosition(&lsidev, reveal_x + 818, reveal_y + 558);
+        iShowSprite(&lsidev);
+      }
+      else if(changeSpirit == 1){
+        iSetSpritePosition(&rsidev, reveal_x + 818, reveal_y + 558);
+        iShowSprite(&rsidev);
+      }
+      else if(changeSpirit == 2){
+        iSetSpritePosition(&frontv, reveal_x + 818, reveal_y + 558);
+        iShowSprite(&frontv);
+      }
+      else if(changeSpirit == 3){
+        iSetSpritePosition(&backv, reveal_x + 818, reveal_y + 558);
+        iShowSprite(&backv);
+      }
       break;
 		case 100:
 			underConstruction();
@@ -84,7 +105,10 @@ void iKeyboard(unsigned char key) {
     case 'q':
 			current_screen = 0;
 			break;
-			
+		case ' ':
+      if(current_screen == 10)
+        r = 1;
+      break;
     default:
 			break;
   }
@@ -97,22 +121,51 @@ void iKeyboard(unsigned char key) {
  * GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
  * GLUT_KEY_INSERT
  */
+
+
+
 void iSpecialKeyboard(unsigned char key) {
   switch (key) {
     case GLUT_KEY_UP:
-      reveal_y+=5;
+      if(current_screen == 10){
+        if(changeSpirit != 2)
+          changeSpirit = 2;
+        else{
+          reveal_y++;
+        }
+      }
       break;
 
     case GLUT_KEY_DOWN:
-      reveal_y-=5;
+      if(current_screen == 10)
+      {
+        if(changeSpirit != 3)
+          changeSpirit = 3;
+        else{
+          reveal_y--;
+        }
+      }
       break;
 
     case GLUT_KEY_RIGHT:
-      reveal_x+=5;
+      if(current_screen == 10){
+        if(changeSpirit != 1)
+          changeSpirit = 1;
+        else{
+          reveal_x++;
+        }
+      }
       break;
 
     case GLUT_KEY_LEFT:
-      reveal_x-=5;
+      if(current_screen == 10)
+      {
+        if(changeSpirit != 0)
+          changeSpirit = 0;
+        else{
+          reveal_x--;
+        }
+      }
       break;
     
     default:
@@ -122,10 +175,13 @@ void iSpecialKeyboard(unsigned char key) {
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
-  
+  iSetTimer(5000, doFade);
+  iSetTimer(50, iAnim);
+
   //Images are to be loaded only once
   iLoadImage(&reveal, "assets/game_screen/test.png");
-
+  iLoadImage(&caveImage, "assets/game_screen/4.png");
+  loadResources();
 	current_screen = 0;
 	iInitializeSound();
 	iInitialize(900, 600, "Echo Caves");
@@ -159,11 +215,14 @@ void startScreen() { //index 0
 //the most important screen
 /*** HIGHLIGHTED ***/
 void game_screen() {
-	iText(10, 10, "Use arrow keys to move the revealed area");
-  iSetColor(50, 150, 50);
-  iFilledRectangle(0, 0, 450, 600);
-  iSetColor(50, 50, 150);
-  iFilledRectangle(450, 0, 450, 600);
+	// iText(10, 10, "Use arrow keys to move the revealed area");
+  // iSetColor(50, 150, 50);
+  // iFilledRectangle(0, 0, 450, 600);
+  // iSetColor(50, 50, 150);
+  // iFilledRectangle(450, 0, 450, 600);
+    //loadResources();
+  if(r == 1)
+    iShowLoadedImage(0, 0, &caveImage);
   iShowLoadedImage(reveal_x, reveal_y, &reveal);
 }
 
@@ -241,4 +300,43 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
     default:
       break;
   }
+}
+void doFade()
+{
+  if(r == 1)
+    r = 0;
+}
+void loadResources()
+{
+	iInitSprite(&lsidev, -1);
+  iInitSprite(&rsidev, -1);
+  iInitSprite(&frontv, -1);
+  iInitSprite(&backv, -1);
+	iLoadFramesFromFolder(lSide, "assets/game_screen/LeftSideWalk");
+  iLoadFramesFromFolder(rSide, "assets/game_screen/RightSideWalk");
+  iLoadFramesFromFolder(front, "assets/game_screen/BackWalk");
+  iLoadFramesFromFolder(back, "assets/game_screen/FrontWalk");
+	for (int i = 0; i < 30; i++) {
+    	iResizeImage(&lSide[i], 125, 125);
+      iResizeImage(&rSide[i], 125, 125);
+      iResizeImage(&front[i], 125, 125);
+      iResizeImage(&back[i], 125, 125);
+	}	
+	iChangeSpriteFrames(&lsidev, lSide, 30);
+  iChangeSpriteFrames(&rsidev, rSide, 30);
+  iChangeSpriteFrames(&frontv, front, 30);
+  iChangeSpriteFrames(&backv, back, 30);
+  
+}
+
+void iAnim()
+{
+  if(changeSpirit == 0)
+	  iAnimateSprite(&lsidev);
+  else if(changeSpirit == 1)
+    iAnimateSprite(&rsidev);
+  else if(changeSpirit == 2)
+    iAnimateSprite(&frontv);
+  else if(changeSpirit == 3)
+    iAnimateSprite(&backv);
 }
