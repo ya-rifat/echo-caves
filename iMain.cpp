@@ -8,6 +8,7 @@ Image lSide[30], front[30], back[30], rSide[30];
 Sprite lsidev, frontv, backv, rsidev;
 int changeSpirit = 1;
 int r = 0;
+
 //function declarations
 /* Screens */
 void startScreen();
@@ -17,6 +18,7 @@ void iAnim();
 void loadResources();
 void game_screen();
 void doFade();
+
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 
@@ -194,11 +196,9 @@ int main(int argc, char *argv[]) {
  * 
  * Declare them on top first
  */
-// Image backgroundImage;
-// iloadImage(&backgroundImage, "assets");
 
 void startScreen() { //index 0
-	iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
+	// iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
 	iShowImage(5, 5, "assets/texts/version.png");
 
   button("play_button", 610, 320, 100, 100, &current_screen, 10);
@@ -214,13 +214,8 @@ void startScreen() { //index 0
 
 //the most important screen
 /*** HIGHLIGHTED ***/
+
 void game_screen() {
-	// iText(10, 10, "Use arrow keys to move the revealed area");
-  // iSetColor(50, 150, 50);
-  // iFilledRectangle(0, 0, 450, 600);
-  // iSetColor(50, 50, 150);
-  // iFilledRectangle(450, 0, 450, 600);
-    //loadResources();
   if(r == 1)
     iShowLoadedImage(0, 0, &caveImage);
   iShowLoadedImage(reveal_x, reveal_y, &reveal);
@@ -236,7 +231,7 @@ void underConstruction() { //screen index 100
 	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
 }
 
-/**
+/*
  * components
  */
 
@@ -301,11 +296,13 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
       break;
   }
 }
+
 void doFade()
 {
   if(r == 1)
     r = 0;
 }
+
 void loadResources()
 {
 	iInitSprite(&lsidev, -1);
