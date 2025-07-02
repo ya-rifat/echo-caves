@@ -3,9 +3,12 @@
 #include <string.h>
 
 //Images
-Image reveal, caveImage;
+Image reveal, cave_background;
 Image lSide[30], front[30], back[30], rSide[30];
 Sprite lsidev, frontv, backv, rsidev;
+
+Sprite front_walk, side_walk, front_idle, side_idle;
+Image front_walk_frames[8], side_walk_frames[8], front_idle_frames[8], side_idle_frames[8];
 int changeSpirit = 1;
 int r = 0;
 
@@ -28,12 +31,15 @@ int is_state_down = 0, is_state_up = 0, is_left_button = 0;
 
 int button_click; //button click detector
 
+//keuboard actions
+unsigned char n_key, s_key; //normal_keyboard, special_keyboard
+//currently testing
+
 //screen tracker
 int current_screen;
 
 //for sound control
 int button_sound;
-
 
 //TODO: test
 int reveal_x = -810, reveal_y = -430; //position
@@ -48,6 +54,7 @@ void iDraw() {
 		case 4:
 			storyScreen();
 			break;
+
     case 10:
       game_screen();
       if(changeSpirit == 0){
@@ -67,6 +74,7 @@ void iDraw() {
         iShowSprite(&backv);
       }
       break;
+
 		case 100:
 			underConstruction();
 			break;
@@ -103,6 +111,8 @@ void iMouse(int button, int state, int mx, int my)
 void iMouseWheel(int dir, int mx, int my) {}
 
 void iKeyboard(unsigned char key) {
+  n_key = key;
+
 	switch (key) {
     case 'q':
 			current_screen = 0;
@@ -124,9 +134,9 @@ void iKeyboard(unsigned char key) {
  * GLUT_KEY_INSERT
  */
 
-
-
 void iSpecialKeyboard(unsigned char key) {
+  s_key = key;
+
   switch (key) {
     case GLUT_KEY_UP:
       if(current_screen == 10){
@@ -178,12 +188,12 @@ void iSpecialKeyboard(unsigned char key) {
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
   iSetTimer(5000, doFade);
-  iSetTimer(50, iAnim);
+  iSetTimer(100, iAnim);
 
   //Images are to be loaded only once
-  iLoadImage(&reveal, "assets/game_screen/test.png");
-  iLoadImage(&caveImage, "assets/game_screen/4.png");
-  loadResources();
+  // iLoadImage(&reveal, "assets/game_screen/test.png");
+  iLoadImage(&cave_background, "assets/game_screen/4.png");
+  // loadResources();
 	current_screen = 0;
 	iInitializeSound();
 	iInitialize(900, 600, "Echo Caves");
@@ -199,16 +209,16 @@ int main(int argc, char *argv[]) {
 
 void startScreen() { //index 0
 	// iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
-	iShowImage(5, 5, "assets/texts/version.png");
+	iShowImage(787, 5, "assets/texts/version.png");
 
-  button("play_button", 610, 320, 100, 100, &current_screen, 10);
-  button("settings_button", 530, 254, 270, 60, &current_screen, 100);
-  button("leaderboard_button", 530, 192, 270, 60, &current_screen, 100);
-  button("story_button", 530, 130, 270, 60, &current_screen, 4);
-  button("help_button", 765, 10, 60, 60, &current_screen, 0);
+  button("play_button", 595, 330, 100, 100, &current_screen, 10);
+  button("settings_button", 510, 234, 270, 60, &current_screen, 100);
+  button("leaderboard_button", 510, 172, 270, 60, &current_screen, 100);
+  button("story_button", 510, 110, 270, 60, &current_screen, 4);
 
+  button("help_button", 80, 10, 60, 60, &current_screen, 0);
   int is_exit_pressed;
-  button("exit_button", 830, 10, 60, 60, &is_exit_pressed, 1);
+  button("exit_button", 10, 10, 60, 60, &is_exit_pressed, 1);
   if (is_exit_pressed) exit(0);
 }
 
@@ -217,7 +227,7 @@ void startScreen() { //index 0
 
 void game_screen() {
   if(r == 1)
-    iShowLoadedImage(0, 0, &caveImage);
+    iShowLoadedImage(0, 0, &cave_background);
   iShowLoadedImage(reveal_x, reveal_y, &reveal);
 }
 
@@ -225,6 +235,10 @@ void storyScreen() { //index 4
 	iShowImage(0, 0, "assets/backgrounds/story_bg.png");
 	iShowImage(98, 200, "assets/texts/story.png");
   button("back", 390, 70, 102, 25, &current_screen, 0, 0);
+}
+
+void settings_screen() {
+  
 }
 
 void underConstruction() { //screen index 100
@@ -305,24 +319,24 @@ void doFade()
 
 void loadResources()
 {
-	iInitSprite(&lsidev, -1);
-  iInitSprite(&rsidev, -1);
-  iInitSprite(&frontv, -1);
-  iInitSprite(&backv, -1);
+	iInitSprite(&lsidev);
+  iInitSprite(&rsidev);
+  iInitSprite(&frontv);
+  iInitSprite(&backv);
 	iLoadFramesFromFolder(lSide, "assets/game_screen/LeftSideWalk");
   iLoadFramesFromFolder(rSide, "assets/game_screen/RightSideWalk");
   iLoadFramesFromFolder(front, "assets/game_screen/BackWalk");
   iLoadFramesFromFolder(back, "assets/game_screen/FrontWalk");
-	for (int i = 0; i < 30; i++) {
-    	iResizeImage(&lSide[i], 125, 125);
-      iResizeImage(&rSide[i], 125, 125);
-      iResizeImage(&front[i], 125, 125);
-      iResizeImage(&back[i], 125, 125);
-	}	
-	iChangeSpriteFrames(&lsidev, lSide, 30);
-  iChangeSpriteFrames(&rsidev, rSide, 30);
-  iChangeSpriteFrames(&frontv, front, 30);
-  iChangeSpriteFrames(&backv, back, 30);
+	// for (int i = 0; i < 30; i++) {
+  //   iResizeImage(&lSide[i], 125, 125);
+  //   iResizeImage(&rSide[i], 125, 125);
+  //   iResizeImage(&front[i], 125, 125);
+  //   iResizeImage(&back[i], 125, 125);
+	// }	
+	iChangeSpriteFrames(&lsidev, lSide, 8);
+  iChangeSpriteFrames(&rsidev, rSide, 8);
+  iChangeSpriteFrames(&frontv, front, 8);
+  iChangeSpriteFrames(&backv, back, 8);
   
 }
 
