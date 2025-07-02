@@ -1,6 +1,6 @@
 obj/opengl.o
+bin/opengl.exe
 *.layout
 *.depend
 .vscode
 *.bin
-bin/opengl.exe

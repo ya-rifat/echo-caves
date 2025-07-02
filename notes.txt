@@ -3,7 +3,10 @@
 /**************/
 
 Start Screen - 0
+Settings Screen - 1
 Story Screen - 4
+
+Game Screen - 10
 Under Construction - 100
 
 /******************/
