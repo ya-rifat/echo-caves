@@ -1,6 +1,15 @@
 #include "iGraphics.h"
 #include "iSound.h"
 #include <string.h>
+#include <stdbool.h>
+
+#define SETTINGS_FILE "data/settings.dat"
+
+//structures
+typedef struct { //toggle state (0 - checked, 1 - unchecked)
+    char id[20]; //name(id) of the data stored in the file
+    bool state;
+} SettingsData; //- used for storing settings data
 
 //Images
 Image reveal, cave_background;
@@ -24,12 +33,13 @@ void doFade();
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
+void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound = 1);
 
 //mouse actions
 int mouse_x = 0, mouse_y = 0;
-int is_state_down = 0, is_state_up = 0, is_left_button = 0;
+bool is_state_down = false, is_state_up = false, is_left_button = false;
 
-int button_click; //button click detector
+bool button_click; //button click detector
 
 //keuboard actions
 unsigned char n_key, s_key; //normal_keyboard, special_keyboard
@@ -39,7 +49,7 @@ unsigned char n_key, s_key; //normal_keyboard, special_keyboard
 int current_screen;
 
 //for sound control
-int button_sound;
+bool button_sound;
 
 //TODO: test
 int reveal_x = -810, reveal_y = -430; //position
@@ -98,10 +108,10 @@ void iMouse(int button, int state, int mx, int my)
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
   
-  if (button_click == 0 && state == GLUT_UP) { //reset button states
-    is_state_down = 0;
-    is_state_up = 0;
-    is_left_button = 0;
+  if (!button_click && state == GLUT_UP) { //reset button states
+    is_state_down = false;
+    is_state_up = false;
+    is_left_button = false;
   }
 }
 
@@ -201,7 +211,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-/**
+/*
  * Define screens here..........
  * 
  * Declare them on top first
@@ -215,6 +225,7 @@ void startScreen() { //index 0
   button("settings_button", 510, 234, 270, 60, &current_screen, 100);
   button("leaderboard_button", 510, 172, 270, 60, &current_screen, 100);
   button("story_button", 510, 110, 270, 60, &current_screen, 4);
+  toggle(100, 100, 29, 16, &current_screen, 0);
 
   button("help_button", 80, 10, 60, 60, &current_screen, 0);
   int is_exit_pressed;
@@ -264,10 +275,9 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
    * if you do not want button to make sound set make_sound param to 0
    */
 
-  int state;
-  char path[200] = "assets/buttons/";
-  strcat(path, texture_name);
-  char texture[200];
+  int state = 0;
+  char texture_path[100] = "assets/buttons/";
+  strcat(texture_path, texture_name);
 
   if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
     state = 1;
@@ -275,38 +285,89 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
     if (is_left_button) {
       if (is_state_down) {
         state = 2;
-        button_click = 1;
+        button_click = true;
+        if (!button_sound && make_sound) {
+          iPlaySound("assets/sounds/button_click.wav", false, 80);
+          button_sound = true;
+        }
       } else if (is_state_up) {
         *var_name = var_value;
-        button_sound =  0;
-        button_click = 0;
+        button_sound =  false;
+        button_click = false;
 
-        is_state_up = 0;
-        is_state_down = 0;
-        is_left_button = 0;
+        is_state_up = false;
+        is_state_down = false;
+        is_left_button = false;
+      }
+    }
+  }
+
+  switch (state) {
+    case 0:
+      strcat(texture_path, ".png");
+      iShowImage(pos_x, pos_y, texture_path);
+      break;
+    case 1:
+      strcat(texture_path, has_state ? "_hover.png" : ".png");
+      iShowImage(pos_x, pos_y, texture_path);
+      break;
+    case 2:
+      strcat(texture_path, has_state ? "_pressed.png" : ".png");
+      iShowImage(pos_x, pos_y, texture_path);
+      break;
+    default:
+      break;
+  }
+}
+
+void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 200
+  
+  /* Notes before using
+   * Kind of same as button
+   */
+
+  int state = 0; //0, 2 initialization
+  char texture_path[100] = "assets/buttons/toggle_";
+
+  if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
+    state = (state / 2) + 1;
+
+    if (is_left_button) {
+      if (is_state_down) {
+        state = state + 1;
+        button_click = true;
+        if (!button_sound && make_sound) {
+          iPlaySound("assets/sounds/button_click.wav", false, 80);
+          button_sound = true;
+        }
+      } else if (is_state_up) {
+        *var_name = var_value;
+        button_sound =  false;
+        button_click = false;
+
+        is_state_up = false;
+        is_state_down = false;
+        is_left_button = false;
       }
     }
   } else state = 0;
 
   switch (state) {
-    case 0:
-      strcpy(texture, path);
-      strcat(texture, ".png");
-      iShowImage(pos_x, pos_y, texture);
+    case 0: //checked
+      strcat(texture_path, "checked.png");
+      iShowImage(pos_x, pos_y, texture_path);
       break;
-    case 1:
-      strcpy(texture, path);
-      strcat(texture, has_state ? "_hover.png" : ".png");
-      iShowImage(pos_x, pos_y, texture);
+    case 1: //checked_hover
+      strcat(texture_path, "checked_hover.png");
+      iShowImage(pos_x, pos_y, texture_path);
       break;
-    case 2:
-      strcpy(texture, path);
-      strcat(texture, has_state ? "_pressed.png" : ".png");
-      iShowImage(pos_x, pos_y, texture);
-			if (!button_sound && make_sound) {
-        iPlaySound("assets/sounds/button_click.wav", false, 80);
-        button_sound = 1;
-      }
+    case 2: //unchecked
+      strcat(texture_path, "unchecked.png");
+      iShowImage(pos_x, pos_y, texture_path);
+      break;
+    case 3: //unchecked_hover
+      strcat(texture_path, "unchecked_hover.png");
+      iShowImage(pos_x, pos_y, texture_path);
       break;
     default:
       break;
@@ -353,3 +414,22 @@ void iAnim()
   else if(changeSpirit == 3)
     iAnimateSprite(&backv);
 }
+
+/*
+ * Read and Write Functions
+ */
+
+/*
+ * enum - destination_file: SETTINGS_FILE, ...
+ * enum - type_of_data: toggle_state, ...
+ * string - id: any name
+ * pointer - pData: pointer to the data to be stored
+ * size_of_data: just pass sizeof( data ) in the parameter
+ */
+void writeData(const char destination_file[], const char type_of_data[], const char id[], void *pData, size_t size_of_data) {
+
+}
+
+/*
+ * Other necessary functions (currently none)
+ */
