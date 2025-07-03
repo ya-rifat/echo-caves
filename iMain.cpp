@@ -223,7 +223,9 @@ void startScreen() { //index 0
 }
 
 //the most important screen
-/*** HIGHLIGHTED ***/
+/*
+ * HIGHLIGHTED * 
+ */
 
 void game_screen() {
   if(r == 1)
