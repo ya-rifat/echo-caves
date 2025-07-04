@@ -5,20 +5,16 @@
 
 #define SETTINGS_FILE "data/settings.dat"
 
-//structures
-typedef struct { //toggle state (0 - checked, 1 - unchecked)
-    char id[20]; //name(id) of the data stored in the file
-    bool state;
-} SettingsData; //- used for storing settings data
-
 //Images
 Image reveal, cave_background;
 Image lSide[30], front[30], back[30], rSide[30];
 Sprite lsidev, frontv, backv, rsidev;
 
-Sprite front_walk, side_walk, front_idle, side_idle;
-Image front_walk_frames[8], side_walk_frames[8], front_idle_frames[8], side_idle_frames[8];
-int changeSpirit = 1;
+Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
+Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
+int character_direction = 0; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
+bool is_moving = false; //detects character movement, if it's not moving play idle animation
+
 int r = 0;
 
 //function declarations
@@ -46,7 +42,7 @@ unsigned char n_key, s_key; //normal_keyboard, special_keyboard
 //currently testing
 
 //screen tracker
-int current_screen;
+int current_screen = 0;
 
 //for sound control
 bool button_sound;
@@ -67,22 +63,6 @@ void iDraw() {
 
     case 10:
       game_screen();
-      if(changeSpirit == 0){
-        iSetSpritePosition(&lsidev, reveal_x + 818, reveal_y + 558);
-        iShowSprite(&lsidev);
-      }
-      else if(changeSpirit == 1){
-        iSetSpritePosition(&rsidev, reveal_x + 818, reveal_y + 558);
-        iShowSprite(&rsidev);
-      }
-      else if(changeSpirit == 2){
-        iSetSpritePosition(&frontv, reveal_x + 818, reveal_y + 558);
-        iShowSprite(&frontv);
-      }
-      else if(changeSpirit == 3){
-        iSetSpritePosition(&backv, reveal_x + 818, reveal_y + 558);
-        iShowSprite(&backv);
-      }
       break;
 
 		case 100:
@@ -91,6 +71,9 @@ void iDraw() {
 		default:
 			break;
 	}
+
+  if (isSpecialKeyPressed(GLUT_KEY_UP) || isSpecialKeyPressed(GLUT_KEY_DOWN) || isSpecialKeyPressed(GLUT_KEY_LEFT) || isSpecialKeyPressed(GLUT_KEY_RIGHT)) is_moving = true;
+  else is_moving = false;
 }
 
 //mouse move
@@ -149,43 +132,47 @@ void iSpecialKeyboard(unsigned char key) {
 
   switch (key) {
     case GLUT_KEY_UP:
+      is_moving = true;
       if(current_screen == 10){
-        if(changeSpirit != 2)
-          changeSpirit = 2;
+        if(character_direction != 3)
+          character_direction = 3;
         else{
-          reveal_y++;
+          reveal_y+=4;
         }
       }
       break;
 
     case GLUT_KEY_DOWN:
+      is_moving = true;
       if(current_screen == 10)
       {
-        if(changeSpirit != 3)
-          changeSpirit = 3;
+        if(character_direction != 2)
+          character_direction = 2;
         else{
-          reveal_y--;
+          reveal_y-=4;
         }
       }
       break;
 
     case GLUT_KEY_RIGHT:
+      is_moving = true;
       if(current_screen == 10){
-        if(changeSpirit != 1)
-          changeSpirit = 1;
+        if(character_direction != 1)
+          character_direction = 1;
         else{
-          reveal_x++;
+          reveal_x+=4;
         }
       }
       break;
 
     case GLUT_KEY_LEFT:
+      is_moving = true;
       if(current_screen == 10)
       {
-        if(changeSpirit != 0)
-          changeSpirit = 0;
+        if(character_direction != 0)
+          character_direction = 0;
         else{
-          reveal_x--;
+          reveal_x-=4;
         }
       }
       break;
@@ -201,10 +188,9 @@ int main(int argc, char *argv[]) {
   iSetTimer(100, iAnim);
 
   //Images are to be loaded only once
-  // iLoadImage(&reveal, "assets/game_screen/test.png");
+  iLoadImage(&reveal, "assets/game_screen/test.png");
   iLoadImage(&cave_background, "assets/game_screen/4.png");
-  // loadResources();
-	current_screen = 0;
+  loadResources();
 	iInitializeSound();
 	iInitialize(900, 600, "Echo Caves");
 
@@ -241,6 +227,44 @@ void startScreen() { //index 0
 void game_screen() {
   if(r == 1)
     iShowLoadedImage(0, 0, &cave_background);
+
+  switch (character_direction * 2 + is_moving) {
+    case 0:
+      iSetSpritePosition(&idle_left, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&idle_left);
+      break;
+    case 1:
+      iSetSpritePosition(&walk_left, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&walk_left);
+      break;
+    case 2:
+      iSetSpritePosition(&idle_right, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&idle_right);
+      break;
+    case 3:
+      iSetSpritePosition(&walk_right, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&walk_right);
+      break;
+    case 4:
+      iSetSpritePosition(&idle_front, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&idle_front);
+      break;
+    case 5:
+      iSetSpritePosition(&walk_front, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&walk_front);
+      break;
+    case 6:
+      iSetSpritePosition(&idle_back, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&idle_back);
+      break;
+    case 7:
+      iSetSpritePosition(&walk_back, reveal_x + 818, reveal_y + 558);
+      iShowSprite(&walk_back);
+      break;
+    default:
+      break;
+  }
+  
   iShowLoadedImage(reveal_x, reveal_y, &reveal);
 }
 
@@ -380,54 +404,88 @@ void doFade()
     r = 0;
 }
 
-void loadResources()
-{
-	iInitSprite(&lsidev);
-  iInitSprite(&rsidev);
-  iInitSprite(&frontv);
-  iInitSprite(&backv);
-	iLoadFramesFromFolder(lSide, "assets/game_screen/LeftSideWalk");
-  iLoadFramesFromFolder(rSide, "assets/game_screen/RightSideWalk");
-  iLoadFramesFromFolder(front, "assets/game_screen/BackWalk");
-  iLoadFramesFromFolder(back, "assets/game_screen/FrontWalk");
-	// for (int i = 0; i < 30; i++) {
-  //   iResizeImage(&lSide[i], 125, 125);
-  //   iResizeImage(&rSide[i], 125, 125);
-  //   iResizeImage(&front[i], 125, 125);
-  //   iResizeImage(&back[i], 125, 125);
-	// }	
-	iChangeSpriteFrames(&lsidev, lSide, 8);
-  iChangeSpriteFrames(&rsidev, rSide, 8);
-  iChangeSpriteFrames(&frontv, front, 8);
-  iChangeSpriteFrames(&backv, back, 8);
-  
+void loadResources() {
+	iInitSprite(&idle_left);
+  iInitSprite(&idle_right);
+  iInitSprite(&idle_front);
+  iInitSprite(&idle_back);
+	iInitSprite(&walk_left);
+  iInitSprite(&walk_right);
+  iInitSprite(&walk_front);
+  iInitSprite(&walk_back);
+  iLoadFramesFromSheet(idle_left_frames, "assets/game_screen/character_spritesheets/idle_left.png", 1, 8);
+  iLoadFramesFromSheet(idle_right_frames, "assets/game_screen/character_spritesheets/idle_right.png", 1, 8);
+  iLoadFramesFromSheet(idle_front_frames, "assets/game_screen/character_spritesheets/idle_front.png", 1, 8);
+  iLoadFramesFromSheet(idle_back_frames, "assets/game_screen/character_spritesheets/idle_back.png", 1, 8);
+  iLoadFramesFromSheet(walk_left_frames, "assets/game_screen/character_spritesheets/walk_left.png", 1, 8);
+  iLoadFramesFromSheet(walk_right_frames, "assets/game_screen/character_spritesheets/walk_right.png", 1, 8);
+  iLoadFramesFromSheet(walk_front_frames, "assets/game_screen/character_spritesheets/walk_front.png", 1, 8);
+  iLoadFramesFromSheet(walk_back_frames, "assets/game_screen/character_spritesheets/walk_back.png", 1, 8);
+	iChangeSpriteFrames(&idle_left, idle_left_frames, 8);
+  iChangeSpriteFrames(&idle_right, idle_right_frames, 8);
+  iChangeSpriteFrames(&idle_front, idle_front_frames, 8);
+  iChangeSpriteFrames(&idle_back, idle_back_frames, 8);
+  iChangeSpriteFrames(&walk_left, walk_left_frames, 8);
+  iChangeSpriteFrames(&walk_right, walk_right_frames, 8);
+  iChangeSpriteFrames(&walk_front, walk_front_frames, 8);
+  iChangeSpriteFrames(&walk_back, walk_back_frames, 8);
 }
 
-void iAnim()
-{
-  if(changeSpirit == 0)
-	  iAnimateSprite(&lsidev);
-  else if(changeSpirit == 1)
-    iAnimateSprite(&rsidev);
-  else if(changeSpirit == 2)
-    iAnimateSprite(&frontv);
-  else if(changeSpirit == 3)
-    iAnimateSprite(&backv);
+void iAnim() {
+  switch (character_direction * 2 + is_moving) {
+    case 0:
+      iAnimateSprite(&idle_left);
+      break;
+    case 1:
+      iAnimateSprite(&walk_left);
+      break;
+    case 2:
+      iAnimateSprite(&idle_right);
+      break;
+    case 3:
+      iAnimateSprite(&walk_right);
+      break;
+    case 4:
+      iAnimateSprite(&idle_front);
+      break;
+    case 5:
+      iAnimateSprite(&walk_front);
+      break;
+    case 6:
+      iAnimateSprite(&idle_back);
+      break;
+    case 7:
+      iAnimateSprite(&walk_back);
+      break;
+    default:
+      break;
+  }
 }
 
 /*
  * Read and Write Functions
- */
-
-/*
+ **************************
  * enum - destination_file: SETTINGS_FILE, ...
  * enum - type_of_data: toggle_state, ...
  * string - id: any name
- * pointer - pData: pointer to the data to be stored
- * size_of_data: just pass sizeof( data ) in the parameter
+ * pointer - value1, value2, ...
+ * 
+ * 
  */
-void writeData(const char destination_file[], const char type_of_data[], const char id[], void *pData, size_t size_of_data) {
 
+//structures
+typedef struct { //toggle state (0 - checked, 1 - unchecked)
+    char id[20]; //name(id) of the data stored in the file
+    int state;
+} ToggleData; //- used for storing toggle data
+
+void writeData(const char destination_file[], const char type_of_data[], const char id[], void *value1) {
+  FILE *pFile = NULL;
+  pFile = fopen(destination_file, "wb");
+  if (pFile == NULL) {
+    printf("Error opening file for reading/writing"); //todo
+    exit(1);
+  }
 }
 
 /*
