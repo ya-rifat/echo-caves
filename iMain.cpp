@@ -7,12 +7,12 @@
 
 //Images
 Image reveal, cave_background;
-Image lSide[30], front[30], back[30], rSide[30];
-Sprite lsidev, frontv, backv, rsidev;
+// Image lSide[30], front[30], back[30], rSide[30];
+// Sprite lsidev, frontv, backv, rsidev;
 
 Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
 Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
-int character_direction = 0; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
+int character_direction = 1; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
 bool is_moving = false; //detects character movement, if it's not moving play idle animation
 
 int r = 0;
@@ -48,7 +48,7 @@ int current_screen = 0;
 bool button_sound;
 
 //TODO: test
-int reveal_x = -810, reveal_y = -430; //position
+int reveal_x = -870, reveal_y = -320; //position
 
 void iDraw() {
 	iClear();
@@ -230,35 +230,35 @@ void game_screen() {
 
   switch (character_direction * 2 + is_moving) {
     case 0:
-      iSetSpritePosition(&idle_left, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&idle_left, reveal_x + 860, reveal_y + 580);
       iShowSprite(&idle_left);
       break;
     case 1:
-      iSetSpritePosition(&walk_left, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&walk_left, reveal_x + 860, reveal_y + 580);
       iShowSprite(&walk_left);
       break;
     case 2:
-      iSetSpritePosition(&idle_right, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&idle_right, reveal_x + 860, reveal_y + 580);
       iShowSprite(&idle_right);
       break;
     case 3:
-      iSetSpritePosition(&walk_right, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&walk_right, reveal_x + 860, reveal_y + 580);
       iShowSprite(&walk_right);
       break;
     case 4:
-      iSetSpritePosition(&idle_front, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&idle_front, reveal_x + 860, reveal_y + 580);
       iShowSprite(&idle_front);
       break;
     case 5:
-      iSetSpritePosition(&walk_front, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&walk_front, reveal_x + 860, reveal_y + 580);
       iShowSprite(&walk_front);
       break;
     case 6:
-      iSetSpritePosition(&idle_back, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&idle_back, reveal_x + 860, reveal_y + 580);
       iShowSprite(&idle_back);
       break;
     case 7:
-      iSetSpritePosition(&walk_back, reveal_x + 818, reveal_y + 558);
+      iSetSpritePosition(&walk_back, reveal_x + 860, reveal_y + 580);
       iShowSprite(&walk_back);
       break;
     default:
