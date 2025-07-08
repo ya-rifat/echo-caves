@@ -5,31 +5,37 @@
 
 #define SETTINGS_FILE "data/settings.dat"
 
-//Images
-Image reveal, cave_background;
-// Image lSide[30], front[30], back[30], rSide[30];
-// Sprite lsidev, frontv, backv, rsidev;
-
-Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
-Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
-int character_direction = 1; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
-bool is_moving = false; //detects character movement, if it's not moving play idle animation
-
-int r = 0;
+#define PLAYER_SPEED 5
+#define UPPER_BOUND 500
 
 //function declarations
 /* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
-void iAnim();
-void loadResources();
 void game_screen();
+
+/* Extra */
+void animate_player();
+void loadResources();
 void doFade();
+void move_player(int direction);
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound = 1);
+
+//Images
+Image reveal, cave_background;
+Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
+Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
+Sprite player_hitbox, cave_collision_box;
+Image player_hitbox_image, cave_collision_box_image;
+int character_direction = 2; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
+bool is_moving = false; //to detect character movement, if it's not moving play idle animation
+bool is_background_moving = false; //background moving
+
+int r = 0;
 
 //mouse actions
 int mouse_x = 0, mouse_y = 0;
@@ -37,18 +43,15 @@ bool is_state_down = false, is_state_up = false, is_left_button = false;
 
 bool button_click; //button click detector
 
-//keuboard actions
-unsigned char n_key, s_key; //normal_keyboard, special_keyboard
-//currently testing
-
 //screen tracker
 int current_screen = 0;
 
 //for sound control
 bool button_sound;
 
-//TODO: test
-int reveal_x = -870, reveal_y = -320; //position
+//player position
+int position_x = 450, position_y = 300; //todo: initialize with saved position
+int background_position_x = 0, background_position_y = 0;
 
 void iDraw() {
 	iClear();
@@ -60,20 +63,15 @@ void iDraw() {
 		case 4:
 			storyScreen();
 			break;
-
     case 10:
       game_screen();
       break;
-
 		case 100:
 			underConstruction();
 			break;
 		default:
 			break;
 	}
-
-  if (isSpecialKeyPressed(GLUT_KEY_UP) || isSpecialKeyPressed(GLUT_KEY_DOWN) || isSpecialKeyPressed(GLUT_KEY_LEFT) || isSpecialKeyPressed(GLUT_KEY_RIGHT)) is_moving = true;
-  else is_moving = false;
 }
 
 //mouse move
@@ -104,8 +102,6 @@ void iMouse(int button, int state, int mx, int my)
 void iMouseWheel(int dir, int mx, int my) {}
 
 void iKeyboard(unsigned char key) {
-  n_key = key;
-
 	switch (key) {
     case 'q':
 			current_screen = 0;
@@ -128,52 +124,27 @@ void iKeyboard(unsigned char key) {
  */
 
 void iSpecialKeyboard(unsigned char key) {
-  s_key = key;
-
-  switch (key) {
-    case GLUT_KEY_UP:
-      is_moving = true;
-      if(current_screen == 10){
-        if(character_direction != 3)
+  switch (current_screen) {
+    case 10:
+      switch (key) {
+        case GLUT_KEY_UP:
           character_direction = 3;
-        else{
-          reveal_y+=4;
-        }
-      }
-      break;
-
-    case GLUT_KEY_DOWN:
-      is_moving = true;
-      if(current_screen == 10)
-      {
-        if(character_direction != 2)
+          move_player(character_direction);
+          break;
+        case GLUT_KEY_DOWN:
           character_direction = 2;
-        else{
-          reveal_y-=4;
-        }
-      }
-      break;
-
-    case GLUT_KEY_RIGHT:
-      is_moving = true;
-      if(current_screen == 10){
-        if(character_direction != 1)
+          move_player(character_direction);
+          break;
+        case GLUT_KEY_RIGHT:
           character_direction = 1;
-        else{
-          reveal_x+=4;
-        }
-      }
-      break;
-
-    case GLUT_KEY_LEFT:
-      is_moving = true;
-      if(current_screen == 10)
-      {
-        if(character_direction != 0)
+          move_player(character_direction);
+          break;
+        case GLUT_KEY_LEFT:
           character_direction = 0;
-        else{
-          reveal_x-=4;
-        }
+          move_player(character_direction);
+          break;
+        default:
+          break;
       }
       break;
     
@@ -184,16 +155,14 @@ void iSpecialKeyboard(unsigned char key) {
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
-  iSetTimer(5000, doFade);
-  iSetTimer(100, iAnim);
+  // iSetTimer(5000, doFade);
+  iSetTimer(100, animate_player);
 
   //Images are to be loaded only once
-  iLoadImage(&reveal, "assets/game_screen/test.png");
-  iLoadImage(&cave_background, "assets/game_screen/4.png");
   loadResources();
+
 	iInitializeSound();
 	iInitialize(900, 600, "Echo Caves");
-
 	return 0;
 }
 
@@ -225,47 +194,58 @@ void startScreen() { //index 0
  */
 
 void game_screen() {
-  if(r == 1)
-    iShowLoadedImage(0, 0, &cave_background);
+  iSetColor(24, 20, 37);
+  iFilledRectangle(0, 0, 900, 600);
+  // if(r == 1)
+  iShowLoadedImage(background_position_x, background_position_y, &cave_background);
+
+  if (isSpecialKeyPressed(GLUT_KEY_UP) || isSpecialKeyPressed(GLUT_KEY_DOWN) || isSpecialKeyPressed(GLUT_KEY_LEFT) || isSpecialKeyPressed(GLUT_KEY_RIGHT)) is_moving = true;
+  else is_moving = false;
+
+  if (position_x >= 100 && position_x <= 800 && position_y >= 100 && position_y <= 500)
+    is_background_moving = false;
+  else {
+    is_background_moving = true;
+  }
 
   switch (character_direction * 2 + is_moving) {
     case 0:
-      iSetSpritePosition(&idle_left, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&idle_left, position_x, position_y);
       iShowSprite(&idle_left);
       break;
     case 1:
-      iSetSpritePosition(&walk_left, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&walk_left, position_x, position_y);
       iShowSprite(&walk_left);
       break;
     case 2:
-      iSetSpritePosition(&idle_right, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&idle_right, position_x, position_y);
       iShowSprite(&idle_right);
       break;
     case 3:
-      iSetSpritePosition(&walk_right, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&walk_right, position_x, position_y);
       iShowSprite(&walk_right);
       break;
     case 4:
-      iSetSpritePosition(&idle_front, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&idle_front, position_x, position_y);
       iShowSprite(&idle_front);
       break;
     case 5:
-      iSetSpritePosition(&walk_front, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&walk_front, position_x, position_y);
       iShowSprite(&walk_front);
       break;
     case 6:
-      iSetSpritePosition(&idle_back, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&idle_back, position_x, position_y);
       iShowSprite(&idle_back);
       break;
     case 7:
-      iSetSpritePosition(&walk_back, reveal_x + 860, reveal_y + 580);
+      iSetSpritePosition(&walk_back, position_x, position_y);
       iShowSprite(&walk_back);
       break;
     default:
       break;
   }
   
-  iShowLoadedImage(reveal_x, reveal_y, &reveal);
+  // iShowLoadedImage(position_x - 870, position_y - 580, &reveal);
 }
 
 void storyScreen() { //index 4
@@ -398,13 +378,43 @@ void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_
   }
 }
 
-void doFade()
-{
+/*
+ * Read and Write Functions
+ **************************
+ * enum - destination_file: SETTINGS_FILE, ...
+ * enum - type_of_data: toggle_state, ...
+ * string - id: any name
+ * pointer - value1, value2, ...
+ */
+
+//structures
+typedef struct { //toggle state (0 - checked, 1 - unchecked)
+    char id[20]; //name(id) of the data stored in the file
+    int state;
+} ToggleData; //- used for storing toggle data
+
+void writeData(const char destination_file[], const char type_of_data[], const char id[], void *value1) {
+  FILE *pFile = NULL;
+  pFile = fopen(destination_file, "wb");
+  if (pFile == NULL) {
+    printf("Error opening file for reading/writing"); //todo
+    exit(1);
+  }
+}
+
+/*
+ * Other necessary functions (currently none)
+ */
+
+
+void doFade() {
   if(r == 1)
     r = 0;
 }
 
 void loadResources() {
+  iLoadImage(&reveal, "assets/game_screen/test.png");
+  iLoadImage(&cave_background, "assets/game_screen/cave_background.png");
 	iInitSprite(&idle_left);
   iInitSprite(&idle_right);
   iInitSprite(&idle_front);
@@ -429,9 +439,16 @@ void loadResources() {
   iChangeSpriteFrames(&walk_right, walk_right_frames, 8);
   iChangeSpriteFrames(&walk_front, walk_front_frames, 8);
   iChangeSpriteFrames(&walk_back, walk_back_frames, 8);
+  iInitSprite(&player_hitbox);
+  iLoadImage(&player_hitbox_image, "assets/game_screen/character_spritesheets/player_hitbox.png");
+  iChangeSpriteFrames(&player_hitbox, &player_hitbox_image, 1);
+  iInitSprite(&cave_collision_box);
+  iLoadImage(&cave_collision_box_image, "assets/game_screen/cave_collision_box.png");
+  iChangeSpriteFrames(&cave_collision_box, &cave_collision_box_image, 1);
+  iSetSpritePosition(&player_hitbox, position_x - 1, position_y - 4);
 }
 
-void iAnim() {
+void animate_player() {
   switch (character_direction * 2 + is_moving) {
     case 0:
       iAnimateSprite(&idle_left);
@@ -462,32 +479,39 @@ void iAnim() {
   }
 }
 
-/*
- * Read and Write Functions
- **************************
- * enum - destination_file: SETTINGS_FILE, ...
- * enum - type_of_data: toggle_state, ...
- * string - id: any name
- * pointer - value1, value2, ...
- * 
- * 
- */
+void move_player(int direction) {
+  int tentative_x = position_x;
+  int tentative_y = position_y;
 
-//structures
-typedef struct { //toggle state (0 - checked, 1 - unchecked)
-    char id[20]; //name(id) of the data stored in the file
-    int state;
-} ToggleData; //- used for storing toggle data
-
-void writeData(const char destination_file[], const char type_of_data[], const char id[], void *value1) {
-  FILE *pFile = NULL;
-  pFile = fopen(destination_file, "wb");
-  if (pFile == NULL) {
-    printf("Error opening file for reading/writing"); //todo
-    exit(1);
+  switch (direction) {
+    case 0: tentative_x -= PLAYER_SPEED; break;
+    case 1: tentative_x += PLAYER_SPEED; break;
+    case 2: tentative_y -= PLAYER_SPEED; break;
+    case 3: tentative_y += PLAYER_SPEED; break;
   }
-}
 
-/*
- * Other necessary functions (currently none)
- */
+  iSetSpritePosition(&player_hitbox, tentative_x - 1, tentative_y - 4);
+  if (!iCheckCollision(&cave_collision_box, &player_hitbox)) {
+    position_x = tentative_x;
+    position_y = tentative_y;
+  }
+
+  if (position_x < 100) {
+    position_x = 100;
+    background_position_x += PLAYER_SPEED;
+  } else if (position_x > 800) {
+    position_x = 800;
+    background_position_x -= PLAYER_SPEED;
+  }
+
+  if (position_y < 80) {
+    position_y = 80;
+    background_position_y += PLAYER_SPEED;
+  } else if (position_y > 480) {
+    position_y = 480;
+    background_position_y -= PLAYER_SPEED;
+  }
+
+  iSetSpritePosition(&player_hitbox, position_x - 1, position_y - 4);
+  iSetSpritePosition(&cave_collision_box, background_position_x, background_position_y);
+}
