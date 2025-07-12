@@ -7,31 +7,44 @@
 
 #define PLAYER_SPEED 5
 #define UPPER_BOUND 500
-
+#define MAXENTRIES 50
 //function declarations
 /* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
 void game_screen();
-
+void updateLeaderboard(char []);
+void showLeaderboard();
+void prompt_screen();
+void settings_screen();
 /* Extra */
 void animate_player();
 void loadResources();
 void doFade();
 void move_player(int direction);
-
+void countTime();
+void showTime();
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound = 1);
 
+// time count korar jonno variable
+int isGameRunning, hours, mins, sec, secPassed = 0;
+//player er name neyar jonno
+int isNameGiven = 0;
+int nameLength = 0;
+char playerName[100];
+// music 
+int music_setting = 1;
+int bgm;
 //Images
 Image reveal, cave_background;
 Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
 Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
 Sprite player_hitbox, cave_collision_box;
 Image player_hitbox_image, cave_collision_box_image;
-int character_direction = 2; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
+int character_direction = 1; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
 bool is_moving = false; //to detect character movement, if it's not moving play idle animation
 bool is_background_moving = false; //background moving
 
@@ -50,8 +63,8 @@ int current_screen = 0;
 bool button_sound;
 
 //player position
-int position_x = 450, position_y = 300; //todo: initialize with saved position
-int background_position_x = 0, background_position_y = 0;
+int position_x = 70, position_y = 344; //todo: initialize with saved position
+int background_position_x = -55, background_position_y = -600;
 
 void iDraw() {
 	iClear();
@@ -65,6 +78,15 @@ void iDraw() {
 			break;
     case 10:
       game_screen();
+      break;
+    case 20:
+      prompt_screen();
+      break;
+    case 30:
+      showLeaderboard();
+      break;
+    case 40:
+      settings_screen();
       break;
 		case 100:
 			underConstruction();
@@ -101,17 +123,55 @@ void iMouse(int button, int state, int mx, int my)
  */
 void iMouseWheel(int dir, int mx, int my) {}
 
-void iKeyboard(unsigned char key) {
-	switch (key) {
+void iKeyboard(unsigned char key)
+{
+  if (current_screen == 20 && isNameGiven == 0)
+  {
+    if (key == '\r')
+    {
+      if (nameLength > 0)
+      {
+        isNameGiven = 1;
+      }
+    }
+    else if (key == '\b')
+    {
+      if (nameLength > 0)
+      {
+        nameLength--;
+        playerName[nameLength] = '\0';
+      }
+    }
+    else if (nameLength < 99 && key >= 32 && key <= 126)
+    {
+      playerName[nameLength++] = key;
+      playerName[nameLength] = '\0';
+    }
+  }
+  else
+  {
+    switch (key)
+    {
     case 'q':
-			current_screen = 0;
-			break;
-		case ' ':
-      if(current_screen == 10)
+      if (current_screen == 10)
+      {
+        isGameRunning = 0;
+        updateLeaderboard(playerName);
+        secPassed = 0;
+        if(music_setting != 0)
+          iIncreaseVolume(bgm, 100);
+      }
+      current_screen = 0;
+      break;
+    case ' ':
+      if (current_screen == 10){
         r = 1;
+        iPlaySound("assets/sounds/echo.wav",0,100);
+      }
       break;
     default:
-			break;
+      break;
+    }
   }
 }
 
@@ -155,13 +215,13 @@ void iSpecialKeyboard(unsigned char key) {
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
-  // iSetTimer(5000, doFade);
+  iSetTimer(7000, doFade);
   iSetTimer(100, animate_player);
-
+  iSetTimer(1000, countTime);
   //Images are to be loaded only once
   loadResources();
-
 	iInitializeSound();
+  bgm = iPlaySound("assets/sounds/Numb.wav", 1, 100);
 	iInitialize(900, 600, "Echo Caves");
 	return 0;
 }
@@ -175,10 +235,12 @@ int main(int argc, char *argv[]) {
 void startScreen() { //index 0
 	// iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
 	iShowImage(787, 5, "assets/texts/version.png");
-
-  button("play_button", 595, 330, 100, 100, &current_screen, 10);
-  button("settings_button", 510, 234, 270, 60, &current_screen, 100);
-  button("leaderboard_button", 510, 172, 270, 60, &current_screen, 100);
+   if(!isNameGiven)
+    button("play_button", 595, 330, 100, 100, &current_screen, 20);
+  else
+    button("play_button", 595, 330, 100, 100, &current_screen, 10);
+  button("settings_button", 510, 234, 270, 60, &current_screen, 40);
+  button("leaderboard_button", 510, 172, 270, 60, &current_screen, 30);
   button("story_button", 510, 110, 270, 60, &current_screen, 4);
   toggle(100, 100, 29, 16, &current_screen, 0);
 
@@ -194,9 +256,11 @@ void startScreen() { //index 0
  */
 
 void game_screen() {
-  iSetColor(24, 20, 37);
-  iFilledRectangle(0, 0, 900, 600);
-  // if(r == 1)
+  iDecreaseVolume(bgm, 100);
+  isGameRunning = 1;
+  // iSetColor(24, 20, 37);
+  // iFilledRectangle(0, 0, 900, 600);
+  if(r == 1)
   iShowLoadedImage(background_position_x, background_position_y, &cave_background);
 
   if (isSpecialKeyPressed(GLUT_KEY_UP) || isSpecialKeyPressed(GLUT_KEY_DOWN) || isSpecialKeyPressed(GLUT_KEY_LEFT) || isSpecialKeyPressed(GLUT_KEY_RIGHT)) is_moving = true;
@@ -245,7 +309,8 @@ void game_screen() {
       break;
   }
   
-  // iShowLoadedImage(position_x - 870, position_y - 580, &reveal);
+  iShowLoadedImage(position_x - 870, position_y - 580, &reveal);
+  showTime();
 }
 
 void storyScreen() { //index 4
@@ -255,7 +320,21 @@ void storyScreen() { //index 4
 }
 
 void settings_screen() {
+  int init_music_setting = music_setting;
+  iSetColor(75, 54, 33);
+  iShowImage(0,0,"assets/backgrounds/story_bg.png");
+  toggle(500, 450, 64, 64, &music_setting, 1, 1);
   
+  if(music_setting != init_music_setting){
+    init_music_setting = music_setting;
+    if(music_setting == 0)
+      iDecreaseVolume(bgm, 100);
+    else 
+      iIncreaseVolume(bgm, 100);
+  }
+  char msg[50];
+  sprintf(msg, "SOUND : %s", music_setting ? "ON" : "OFF");
+  iText(370, 450, msg, GLUT_BITMAP_HELVETICA_18);
 }
 
 void underConstruction() { //screen index 100
@@ -324,60 +403,92 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
   }
 }
 
-void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 200
+// void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 200
   
-  /* Notes before using
-   * Kind of same as button
-   */
+//   /* Notes before using
+//    * Kind of same as button
+//    */
 
-  int state = 0; //0, 2 initialization
-  char texture_path[100] = "assets/buttons/toggle_";
+//   int state = 0; //0, 2 initialization
+//   char texture_path[100] = "assets/buttons/toggle_";
 
-  if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
-    state = (state / 2) + 1;
+//   if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
+//     state = (state / 2) + 1;
 
-    if (is_left_button) {
-      if (is_state_down) {
-        state = state + 1;
-        button_click = true;
-        if (!button_sound && make_sound) {
-          iPlaySound("assets/sounds/button_click.wav", false, 80);
-          button_sound = true;
-        }
-      } else if (is_state_up) {
-        *var_name = var_value;
-        button_sound =  false;
-        button_click = false;
+//     if (is_left_button) {
+//       if (is_state_down) {
+//         state = state + 1;
+//         button_click = true;
+//         if (!button_sound && make_sound) {
+//           iPlaySound("assets/sounds/button_click.wav", false, 80);
+//           button_sound = true;
+//         }
+//       } else if (is_state_up) {
+//         *var_name = var_value;
+//         button_sound =  false;
+//         button_click = false;
 
-        is_state_up = false;
-        is_state_down = false;
-        is_left_button = false;
-      }
+//         is_state_up = false;
+//         is_state_down = false;
+//         is_left_button = false;
+//       }
+//     }
+//   } else state = 0;
+
+//   switch (state) {
+//     case 0: //checked
+//       strcat(texture_path, "checked.png");
+//       iShowImage(pos_x, pos_y, texture_path);
+//       break;
+//     case 1: //checked_hover
+//       strcat(texture_path, "checked_hover.png");
+//       iShowImage(pos_x, pos_y, texture_path);
+//       break;
+//     case 2: //unchecked
+//       strcat(texture_path, "unchecked.png");
+//       iShowImage(pos_x, pos_y, texture_path);
+//       break;
+//     case 3: //unchecked_hover
+//       strcat(texture_path, "unchecked_hover.png");
+//       iShowImage(pos_x, pos_y, texture_path);
+//       break;
+//     default:
+//       break;
+//   }
+// }
+void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) {
+    char texture_path[100] = "assets/buttons/toggle_";
+    static bool was_pressed = false;
+
+    bool is_inside = (mouse_x >= pos_x && mouse_x <= pos_x + width &&
+                      mouse_y >= pos_y && mouse_y <= pos_y + height);
+    bool is_checked = (*var_name == var_value);
+
+    int state = 0;
+    if (is_checked) state = is_inside ? 1 : 0;
+    else            state = is_inside ? 3 : 2;
+
+    switch (state) {
+        case 0: strcat(texture_path, "checked.png"); break;
+        case 1: strcat(texture_path, "checked_hover.png"); break;
+        case 2: strcat(texture_path, "unchecked.png"); break;
+        case 3: strcat(texture_path, "unchecked_hover.png"); break;
     }
-  } else state = 0;
 
-  switch (state) {
-    case 0: //checked
-      strcat(texture_path, "checked.png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    case 1: //checked_hover
-      strcat(texture_path, "checked_hover.png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    case 2: //unchecked
-      strcat(texture_path, "unchecked.png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    case 3: //unchecked_hover
-      strcat(texture_path, "unchecked_hover.png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    default:
-      break;
-  }
+    iShowImage(pos_x, pos_y, texture_path);
+
+    if (is_inside && is_left_button) {
+        was_pressed = true;
+    } else if (was_pressed) {
+        if (is_inside) {
+            *var_name = is_checked ? 0 : var_value;
+            if (make_sound) {
+                iPlaySound("assets/sounds/button_click.wav", false, 80);
+            }
+        }
+        was_pressed = false;
+    }
 }
-
 /*
  * Read and Write Functions
  **************************
@@ -515,3 +626,122 @@ void move_player(int direction) {
   iSetSpritePosition(&player_hitbox, position_x - 1, position_y - 4);
   iSetSpritePosition(&cave_collision_box, background_position_x, background_position_y);
 }
+
+void countTime()
+{
+  if(isGameRunning == 1)
+    secPassed++;
+}
+
+void showTime()
+{
+  if (isGameRunning) {
+        mins = secPassed / 60;
+        sec = secPassed % 60;
+        hours = mins/60;
+        char timeText[20];
+        sprintf(timeText, "%02d:%02d:%02d", hours, mins, sec);
+        iSetColor(255,255,0);
+        iText(800, 580, timeText, GLUT_BITMAP_HELVETICA_18);
+    }
+}
+
+typedef struct
+{
+  char name[100];
+  int seconds; // eita lagbe karon amra chai leaderboard sort korte
+  char time[10];
+} player;
+
+// ekn player structure er ekta array lagbe! 
+player leaderboard[MAXENTRIES];
+
+void prompt_screen()
+{
+  iClear();
+  iSetColor(75, 54, 33);
+  iShowImage(0,0,"assets/backgrounds/story_bg.png");
+  if (!isNameGiven) {
+        iText(100, 400, "ENTER YOUR NAME : ", GLUT_BITMAP_HELVETICA_18);
+        iText(290, 400, playerName, GLUT_BITMAP_HELVETICA_18);
+        iText(100, 300, "Press ENTER to start", GLUT_BITMAP_HELVETICA_18);
+    } else {
+        current_screen = 10;
+    }
+}
+void showLeaderboard() {
+    iShowImage(0,0,"assets/backgrounds/story_bg.png");
+    FILE *fp = fopen("data/leaderboard.dat", "rb");
+    int cnt = 0;
+    if (fp != NULL) {
+        char name[100], time[100];
+        while (fscanf(fp, "%s %s", name, time) == 2) {
+            if(cnt >= MAXENTRIES) break;
+            // copy korte hobe
+            strcpy(leaderboard[cnt].name, name);
+            strcpy(leaderboard[cnt].time, time);
+            int hr, mm, ss;
+            sscanf(time, "%d:%d:%d", &hr, &mm, &ss);
+            leaderboard[cnt].seconds = hr * 3600 + mm * 60 + ss;
+            cnt++;
+        }
+        fclose(fp);
+    } else {
+        printf("Error opening leaderboard file.\n");
+    }
+
+    // ekhn sort kore felte hobe
+    for (int i = 0; i < cnt - 1; i++) {
+        for (int j = i + 1; j < cnt; j++) {
+            if (leaderboard[j].seconds < leaderboard[i].seconds) {
+                player temp = leaderboard[i];
+                leaderboard[i] = leaderboard[j];
+                leaderboard[j] = temp;
+            }
+        }
+    }
+    int top = cnt < 5 ? cnt : 5;
+    // ekn amar kaj top 10 store kora
+    fp = NULL;
+    fp = fopen("data/leaderboard.dat", "wb");
+    if(fp!=NULL)
+    {
+      for(int i = 0; i < top; i++){
+         fprintf(fp, "%s %s\n", leaderboard[i].name, leaderboard[i].time);
+      }
+      fclose(fp);
+    }
+    else{
+      printf("Error opening the file\n");
+      exit(1);
+    }
+    //leaderboard ekn show korte hobe
+    iSetColor(75, 54, 33);
+    int y = 500;
+    iText(390, y + 30, "LEADERBOARD", GLUT_BITMAP_HELVETICA_18);
+    for (int i = 0; i < cnt && i < 5; i++) {
+        char entry[100];
+        entry[149] = '\0';
+        char time[10];
+        sprintf(entry, "%02d. %s", i + 1, leaderboard[i].name);
+        sprintf(time, "%s", leaderboard[i].time);
+        iText(120, y, entry, GLUT_BITMAP_HELVETICA_18);
+        iText(240, y, time, GLUT_BITMAP_HELVETICA_18);
+        y -= 30;
+    }
+}
+void updateLeaderboard(char playerName[])
+{
+  FILE *fp = NULL;
+  fp = fopen("data/leaderboard.dat", "a");
+  if(fp != NULL)
+  {
+    fprintf(fp, "%s %02d:%02d:%02d\n", playerName, hours, mins, sec);
+    fclose(fp);
+  }
+  else{
+    printf("Error opening the leaderboard file.\n");
+    exit(1);
+  }
+}
+
