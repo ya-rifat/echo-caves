@@ -123,7 +123,7 @@ void iMouse(int button, int state, int mx, int my)
  */
 void iMouseWheel(int dir, int mx, int my) {}
 
-void iKeyboard(unsigned char key)
+void iKeyPress(unsigned char key)
 {
   if (current_screen == 20 && isNameGiven == 0)
   {
@@ -183,7 +183,7 @@ void iKeyboard(unsigned char key)
  * GLUT_KEY_INSERT
  */
 
-void iSpecialKeyboard(unsigned char key) {
+void iSpecialKeyPress(unsigned char key) {
   switch (current_screen) {
     case 10:
       switch (key) {
@@ -218,11 +218,11 @@ int main(int argc, char *argv[]) {
   iSetTimer(7000, doFade);
   iSetTimer(100, animate_player);
   iSetTimer(1000, countTime);
+
   //Images are to be loaded only once
   loadResources();
-	iInitializeSound();
-  bgm = iPlaySound("assets/sounds/Numb.wav", 1, 100);
-	iInitialize(900, 600, "Echo Caves");
+  bgm = iPlaySound("assets/sounds/Numb.wav", true, 60);
+	iOpenWindow(900, 600, "Echo Caves");
 	return 0;
 }
 
@@ -242,12 +242,11 @@ void startScreen() { //index 0
   button("settings_button", 510, 234, 270, 60, &current_screen, 40);
   button("leaderboard_button", 510, 172, 270, 60, &current_screen, 30);
   button("story_button", 510, 110, 270, 60, &current_screen, 4);
-  toggle(100, 100, 29, 16, &current_screen, 0);
 
   button("help_button", 80, 10, 60, 60, &current_screen, 0);
   int is_exit_pressed;
   button("exit_button", 10, 10, 60, 60, &is_exit_pressed, 1);
-  if (is_exit_pressed) exit(0);
+  if (is_exit_pressed) iCloseWindow();
 }
 
 //the most important screen
@@ -258,8 +257,6 @@ void startScreen() { //index 0
 void game_screen() {
   iDecreaseVolume(bgm, 100);
   isGameRunning = 1;
-  // iSetColor(24, 20, 37);
-  // iFilledRectangle(0, 0, 900, 600);
   if(r == 1)
   iShowLoadedImage(background_position_x, background_position_y, &cave_background);
 
@@ -526,14 +523,6 @@ void doFade() {
 void loadResources() {
   iLoadImage(&reveal, "assets/game_screen/test.png");
   iLoadImage(&cave_background, "assets/game_screen/cave_background.png");
-	iInitSprite(&idle_left);
-  iInitSprite(&idle_right);
-  iInitSprite(&idle_front);
-  iInitSprite(&idle_back);
-	iInitSprite(&walk_left);
-  iInitSprite(&walk_right);
-  iInitSprite(&walk_front);
-  iInitSprite(&walk_back);
   iLoadFramesFromSheet(idle_left_frames, "assets/game_screen/character_spritesheets/idle_left.png", 1, 8);
   iLoadFramesFromSheet(idle_right_frames, "assets/game_screen/character_spritesheets/idle_right.png", 1, 8);
   iLoadFramesFromSheet(idle_front_frames, "assets/game_screen/character_spritesheets/idle_front.png", 1, 8);
@@ -550,10 +539,8 @@ void loadResources() {
   iChangeSpriteFrames(&walk_right, walk_right_frames, 8);
   iChangeSpriteFrames(&walk_front, walk_front_frames, 8);
   iChangeSpriteFrames(&walk_back, walk_back_frames, 8);
-  iInitSprite(&player_hitbox);
   iLoadImage(&player_hitbox_image, "assets/game_screen/character_spritesheets/player_hitbox.png");
   iChangeSpriteFrames(&player_hitbox, &player_hitbox_image, 1);
-  iInitSprite(&cave_collision_box);
   iLoadImage(&cave_collision_box_image, "assets/game_screen/cave_collision_box.png");
   iChangeSpriteFrames(&cave_collision_box, &cave_collision_box_image, 1);
   iSetSpritePosition(&player_hitbox, position_x - 1, position_y - 4);
@@ -627,14 +614,12 @@ void move_player(int direction) {
   iSetSpritePosition(&cave_collision_box, background_position_x, background_position_y);
 }
 
-void countTime()
-{
+void countTime() {
   if(isGameRunning == 1)
     secPassed++;
 }
 
-void showTime()
-{
+void showTime() {
   if (isGameRunning) {
         mins = secPassed / 60;
         sec = secPassed % 60;
@@ -646,8 +631,7 @@ void showTime()
     }
 }
 
-typedef struct
-{
+typedef struct {
   char name[100];
   int seconds; // eita lagbe karon amra chai leaderboard sort korte
   char time[10];
@@ -656,8 +640,7 @@ typedef struct
 // ekn player structure er ekta array lagbe! 
 player leaderboard[MAXENTRIES];
 
-void prompt_screen()
-{
+void prompt_screen() {
   iClear();
   iSetColor(75, 54, 33);
   iShowImage(0,0,"assets/backgrounds/story_bg.png");
@@ -669,6 +652,7 @@ void prompt_screen()
         current_screen = 10;
     }
 }
+
 void showLeaderboard() {
     iShowImage(0,0,"assets/backgrounds/story_bg.png");
     FILE *fp = fopen("data/leaderboard.dat", "rb");
@@ -730,8 +714,8 @@ void showLeaderboard() {
         y -= 30;
     }
 }
-void updateLeaderboard(char playerName[])
-{
+
+void updateLeaderboard(char playerName[]) {
   FILE *fp = NULL;
   fp = fopen("data/leaderboard.dat", "a");
   if(fp != NULL)
@@ -744,4 +728,3 @@ void updateLeaderboard(char playerName[])
     exit(1);
   }
 }
-
