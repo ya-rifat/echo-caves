@@ -1,8 +1,10 @@
 #include "iGraphics.h"
 #include "iSound.h"
+#include "iFont.h"
 #include <string.h>
 #include <stdbool.h>
 
+#define CUSTOM_FONT "assets/fonts/Minecraft-Five.ttf"
 #define SETTINGS_FILE "data/settings.dat"
 
 #define PLAYER_SPEED 5
@@ -18,6 +20,7 @@ void updateLeaderboard(char []);
 void showLeaderboard();
 void prompt_screen();
 void settings_screen();
+
 /* Extra */
 void animate_player();
 void loadResources();
@@ -25,6 +28,7 @@ void doFade();
 void move_player(int direction);
 void countTime();
 void showTime();
+
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
 void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound = 1);
@@ -105,8 +109,7 @@ void iMouseMove(int mx, int my) {
 //mouse drag and move
 void iMouseDrag(int mx, int my) {}
 
-void iMouse(int button, int state, int mx, int my)
-{
+void iMouse(int button, int state, int mx, int my) {
   is_state_down = state == GLUT_DOWN;
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
@@ -123,8 +126,7 @@ void iMouse(int button, int state, int mx, int my)
  */
 void iMouseWheel(int dir, int mx, int my) {}
 
-void iKeyPress(unsigned char key)
-{
+void iKeyPress(unsigned char key) {
   if (current_screen == 20 && isNameGiven == 0)
   {
     if (key == '\r')
@@ -331,11 +333,11 @@ void settings_screen() {
   }
   char msg[50];
   sprintf(msg, "SOUND : %s", music_setting ? "ON" : "OFF");
-  iText(370, 450, msg, GLUT_BITMAP_HELVETICA_18);
+  iShowText(370, 450, msg, CUSTOM_FONT, 18);
 }
 
 void underConstruction() { //screen index 100
-	iText(10, 10, "Under Construction...   Come back later (Press q to go back)");
+	iShowText(10, 10, "Under Construction...   Come back later (Press q to go back)", CUSTOM_FONT);
 }
 
 /*
@@ -457,8 +459,7 @@ void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_
     char texture_path[100] = "assets/buttons/toggle_";
     static bool was_pressed = false;
 
-    bool is_inside = (mouse_x >= pos_x && mouse_x <= pos_x + width &&
-                      mouse_y >= pos_y && mouse_y <= pos_y + height);
+    bool is_inside = (mouse_x >= pos_x && mouse_x <= pos_x + width && mouse_y >= pos_y && mouse_y <= pos_y + height);
     bool is_checked = (*var_name == var_value);
 
     int state = 0;
@@ -627,7 +628,7 @@ void showTime() {
         char timeText[20];
         sprintf(timeText, "%02d:%02d:%02d", hours, mins, sec);
         iSetColor(255,255,0);
-        iText(800, 580, timeText, GLUT_BITMAP_HELVETICA_18);
+        iShowText(800, 580, timeText, CUSTOM_FONT, 18);
     }
 }
 
@@ -645,9 +646,9 @@ void prompt_screen() {
   iSetColor(75, 54, 33);
   iShowImage(0,0,"assets/backgrounds/story_bg.png");
   if (!isNameGiven) {
-        iText(100, 400, "ENTER YOUR NAME : ", GLUT_BITMAP_HELVETICA_18);
-        iText(290, 400, playerName, GLUT_BITMAP_HELVETICA_18);
-        iText(100, 300, "Press ENTER to start", GLUT_BITMAP_HELVETICA_18);
+        iShowText(100, 400, "ENTER YOUR NAME : ", CUSTOM_FONT, 18);
+        iShowText(290, 400, playerName, CUSTOM_FONT, 18);
+        iShowText(100, 300, "Press ENTER to start", CUSTOM_FONT, 18);
     } else {
         current_screen = 10;
     }
@@ -702,15 +703,15 @@ void showLeaderboard() {
     //leaderboard ekn show korte hobe
     iSetColor(75, 54, 33);
     int y = 500;
-    iText(390, y + 30, "LEADERBOARD", GLUT_BITMAP_HELVETICA_18);
+    iShowText(390, y + 30, "LEADERBOARD", CUSTOM_FONT, 24);
     for (int i = 0; i < cnt && i < 5; i++) {
         char entry[100];
         entry[149] = '\0';
         char time[10];
         sprintf(entry, "%02d. %s", i + 1, leaderboard[i].name);
         sprintf(time, "%s", leaderboard[i].time);
-        iText(120, y, entry, GLUT_BITMAP_HELVETICA_18);
-        iText(240, y, time, GLUT_BITMAP_HELVETICA_18);
+        iShowText(120, y, entry, CUSTOM_FONT, 18);
+        iShowText(240, y, time, CUSTOM_FONT, 18);
         y -= 30;
     }
 }

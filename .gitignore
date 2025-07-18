@@ -1,5 +1,3 @@
-obj/opengl.o
-bin/opengl.exe
 obj/*.o
 bin/*.exe
 *.layout
