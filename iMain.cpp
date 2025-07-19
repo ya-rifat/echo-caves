@@ -5,18 +5,49 @@
 #include <stdbool.h>
 
 #define CUSTOM_FONT "assets/fonts/Minecraft-Five.ttf"
+#define LEADERBOARD_FILE "data/leaderboard.dat"
 #define SETTINGS_FILE "data/settings.dat"
 
 #define PLAYER_SPEED 5
 #define UPPER_BOUND 500
 #define MAXENTRIES 50
+#define ENTRY_SIZE 100
+#define ENTRY_ID_SIZE 32
+
+//enums
+typedef enum {
+  TYPE_INTEGER = 1,
+  TYPE_STRING = 2,
+  TYPE_FLOAT = 3,
+  TYPE_VEC2 = 4
+} FileDataType;
+
+//structures
+
+typedef struct {
+  char id[ENTRY_ID_SIZE];
+  FileDataType type;
+  int x;
+  int y;
+} Vec2;
+
+typedef struct {
+  char id[ENTRY_ID_SIZE];
+  FileDataType type;
+  union {
+    int int_num;
+    float float_num;
+    Vec2 vec2;
+    char string[64];
+  } value;
+} FileData;
+
 //function declarations
 /* Screens */
 void startScreen();
 void storyScreen();
 void underConstruction();
 void game_screen();
-void updateLeaderboard(char []);
 void showLeaderboard();
 void prompt_screen();
 void settings_screen();
@@ -28,6 +59,9 @@ void doFade();
 void move_player(int direction);
 void countTime();
 void showTime();
+void updateLeaderboard(char []);
+void writeData(const char destination_file[], FileDataType type_of_data, const char id[], void *value1, void *value2 = nullptr);
+FileData readData(const char destination_file[], const char id[]);
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
@@ -35,17 +69,20 @@ void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_
 
 // time count korar jonno variable
 int isGameRunning, hours, mins, sec, secPassed = 0;
+
 //player er name neyar jonno
-int isNameGiven = 0;
 int nameLength = 0;
-char playerName[100];
+char playerName[30], temp_player_name[30];
+bool isNameGiven;
+
 // music 
 int music_setting = 1;
 int bgm;
+
 //Images
 Image reveal, cave_background;
-Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8];
-Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back;
+Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8], anim_start_player[8];
+Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back, anim_start;
 Sprite player_hitbox, cave_collision_box;
 Image player_hitbox_image, cave_collision_box_image;
 int character_direction = 1; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
@@ -127,55 +164,68 @@ void iMouse(int button, int state, int mx, int my) {
 void iMouseWheel(int dir, int mx, int my) {}
 
 void iKeyPress(unsigned char key) {
-  if (current_screen == 20 && isNameGiven == 0)
-  {
-    if (key == '\r')
-    {
-      if (nameLength > 0)
-      {
-        isNameGiven = 1;
-      }
-    }
-    else if (key == '\b')
-    {
-      if (nameLength > 0)
-      {
-        nameLength--;
-        playerName[nameLength] = '\0';
-      }
-    }
-    else if (nameLength < 99 && key >= 32 && key <= 126)
-    {
-      playerName[nameLength++] = key;
-      playerName[nameLength] = '\0';
-    }
-  }
-  else
-  {
-    switch (key)
-    {
-    case 'q':
-      if (current_screen == 10)
-      {
-        isGameRunning = 0;
-        updateLeaderboard(playerName);
-        secPassed = 0;
-        if(music_setting != 0)
-          iIncreaseVolume(bgm, 100);
-      }
-      current_screen = 0;
-      break;
-    case ' ':
-      if (current_screen == 10){
-        r = 1;
-        iPlaySound("assets/sounds/echo.wav",0,100);
+  switch (current_screen) {
+    case 10:
+      switch (key) {
+        case '\e': //escape
+          isGameRunning = 0;
+          updateLeaderboard(playerName);
+          secPassed = 0;
+          // if(music_setting != 0)
+          //   iIncreaseVolume(bgm, 100);
+          current_screen = 0;
+          break;
+        case ' ':
+            r = 1;
+            // iPlaySound("assets/sounds/echo.wav",0,100);
+          break;
+
+        default:
+          break;
       }
       break;
+
+    case 20:
+      switch (key) {
+        case '\r': //enter
+          if (nameLength > 0) {
+            isNameGiven = true;
+          }
+          strcpy(playerName, temp_player_name);
+          writeData(SETTINGS_FILE, TYPE_STRING, "player_name", playerName);
+          break;
+        case '\b': //backspace
+          if (nameLength > 0) {
+            nameLength--;
+            temp_player_name[nameLength] = '\0';
+          }
+          break;
+        case '\e': //escape
+          current_screen = 0;
+          break;
+        default:
+          if (nameLength < 29 && key >= 32 && key <= 126) {
+            temp_player_name[nameLength++] = key;
+            temp_player_name[nameLength] = '\0';
+          }
+          break;
+      }
+      break;
+    
     default:
-      break;
-    }
+      switch (key) {
+      case '\e': //escape
+        current_screen = 0;
+        break;
+      
+      default:
+        break;
+      }
+    break;
   }
 }
+
+void iKeyRelease(unsigned char key) {}
 
 /*
  * GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
@@ -185,9 +235,21 @@ void iKeyPress(unsigned char key) {
  * GLUT_KEY_INSERT
  */
 
+void iSpecialKeyRelease(unsigned char key) {
+  switch (current_screen) {
+    case 10:
+      is_moving = false;
+      break;
+    
+    default:
+      break;
+  }
+}
+
 void iSpecialKeyPress(unsigned char key) {
   switch (current_screen) {
     case 10:
+      is_moving = true;
       switch (key) {
         case GLUT_KEY_UP:
           character_direction = 3;
@@ -221,8 +283,15 @@ int main(int argc, char *argv[]) {
   iSetTimer(100, animate_player);
   iSetTimer(1000, countTime);
 
+  //variable data initialization from settings file
+  FileData playerNameData = readData(SETTINGS_FILE, "player_name");
+  strcpy(playerName, playerNameData.value.string);
+  // isNameGiven = (bool)strcmp(playerName, "Player");
+
   //Images are to be loaded only once
   loadResources();
+
+  iSetSpritePosition(&anim_start, 150, 200);
   bgm = iPlaySound("assets/sounds/Numb.wav", true, 60);
 	iOpenWindow(900, 600, "Echo Caves");
 	return 0;
@@ -235,35 +304,34 @@ int main(int argc, char *argv[]) {
  */
 
 void startScreen() { //index 0
-	// iShowImage(0,0, "assets/backgrounds/game_bg.jpg");
+  iSetColor(1, 0, 20);
+  iFilledRectangle(0, 0, 900, 600);
+  iShowImage(200, 475, "assets/logo.png");
 	iShowImage(787, 5, "assets/texts/version.png");
-   if(!isNameGiven)
-    button("play_button", 595, 330, 100, 100, &current_screen, 20);
+  if(!isNameGiven)
+    button("play_button", 595, 320, 100, 100, &current_screen, 20);
   else
-    button("play_button", 595, 330, 100, 100, &current_screen, 10);
-  button("settings_button", 510, 234, 270, 60, &current_screen, 40);
-  button("leaderboard_button", 510, 172, 270, 60, &current_screen, 30);
-  button("story_button", 510, 110, 270, 60, &current_screen, 4);
+    button("play_button", 595, 320, 100, 100, &current_screen, 10);
+  button("settings_button", 510, 224, 270, 60, &current_screen, 40);
+  button("leaderboard_button", 510, 162, 270, 60, &current_screen, 30);
+  button("story_button", 510, 100, 270, 60, &current_screen, 4);
 
   button("help_button", 80, 10, 60, 60, &current_screen, 0);
   int is_exit_pressed;
   button("exit_button", 10, 10, 60, 60, &is_exit_pressed, 1);
   if (is_exit_pressed) iCloseWindow();
+
+  iSetColor(255, 255, 255);
+  iShowText(12, 80, "Name: ", CUSTOM_FONT, 18);
+  iShowText(90, 80, playerName, CUSTOM_FONT, 18);
+  iShowSprite(&anim_start);
 }
 
-//the most important screen
-/*
- * HIGHLIGHTED * 
- */
-
-void game_screen() {
+void game_screen() { //* HIGHLIGHTED
   iDecreaseVolume(bgm, 100);
   isGameRunning = 1;
   if(r == 1)
   iShowLoadedImage(background_position_x, background_position_y, &cave_background);
-
-  if (isSpecialKeyPressed(GLUT_KEY_UP) || isSpecialKeyPressed(GLUT_KEY_DOWN) || isSpecialKeyPressed(GLUT_KEY_LEFT) || isSpecialKeyPressed(GLUT_KEY_RIGHT)) is_moving = true;
-  else is_moving = false;
 
   if (position_x >= 100 && position_x <= 800 && position_y >= 100 && position_y <= 500)
     is_background_moving = false;
@@ -318,7 +386,7 @@ void storyScreen() { //index 4
   button("back", 390, 70, 102, 25, &current_screen, 0, 0);
 }
 
-void settings_screen() {
+void settings_screen() { //index 1
   int init_music_setting = music_setting;
   iSetColor(75, 54, 33);
   iShowImage(0,0,"assets/backgrounds/story_bg.png");
@@ -344,7 +412,7 @@ void underConstruction() { //screen index 100
  * components
  */
 
-void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state, int make_sound) { //max length of texture path is 200
+void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state, int make_sound) { //max length of texture path is 100
   
   /* Notes before using
    * Button texture must be in assets/buttons folder
@@ -385,21 +453,11 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
   }
 
   switch (state) {
-    case 0:
-      strcat(texture_path, ".png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    case 1:
-      strcat(texture_path, has_state ? "_hover.png" : ".png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    case 2:
-      strcat(texture_path, has_state ? "_pressed.png" : ".png");
-      iShowImage(pos_x, pos_y, texture_path);
-      break;
-    default:
-      break;
+    case 0: strcat(texture_path, ".png"); break;
+    case 1: strcat(texture_path, has_state ? "_hover.png" : ".png"); break;
+    case 2: strcat(texture_path, has_state ? "_pressed.png" : ".png"); break;
   }
+  iShowImage(pos_x, pos_y, texture_path);
 }
 
 // void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 200
@@ -455,7 +513,7 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
 //       break;
 //   }
 // }
-void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) {
+void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 100
     char texture_path[100] = "assets/buttons/toggle_";
     static bool was_pressed = false;
 
@@ -487,6 +545,7 @@ void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_
         was_pressed = false;
     }
 }
+
 /*
  * Read and Write Functions
  **************************
@@ -496,25 +555,91 @@ void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_
  * pointer - value1, value2, ...
  */
 
-//structures
-typedef struct { //toggle state (0 - checked, 1 - unchecked)
-    char id[20]; //name(id) of the data stored in the file
-    int state;
-} ToggleData; //- used for storing toggle data
-
-void writeData(const char destination_file[], const char type_of_data[], const char id[], void *value1) {
+void writeData(const char destination_file[], FileDataType type_of_data, const char id[], void *value1, void *value2) {
   FILE *pFile = NULL;
-  pFile = fopen(destination_file, "wb");
-  if (pFile == NULL) {
-    printf("Error opening file for reading/writing"); //todo
-    exit(1);
+  pFile = fopen(destination_file, "r+b");
+  if (!pFile) return;
+
+  FileData buffer;
+  long offset = 0;
+  FileData data;
+  bool is_match_found = false;
+
+  while (fread(&buffer, ENTRY_SIZE, 1, pFile) == 1) {
+    if (!strncmp(buffer.id, id, 32)) {
+      is_match_found = true;
+      fseek(pFile, offset, SEEK_SET);
+      break;
+    }
+    offset += ENTRY_SIZE;
+    fseek(pFile, offset, SEEK_SET);
   }
+
+  switch (type_of_data) {
+    case TYPE_INTEGER:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      data.type = TYPE_INTEGER;
+      data.value.int_num = *(int *)value1;
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    case TYPE_STRING:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      data.type = TYPE_STRING;
+      strncpy(data.value.string, (char *)value1, sizeof(data.value.string) - 1);
+      data.value.string[sizeof(data.value.string) - 1] = '\0';
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    case TYPE_FLOAT:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      data.type = TYPE_FLOAT;
+      data.value.float_num = *(float *)value1;
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    case TYPE_VEC2:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      data.type = TYPE_VEC2;
+      data.value.vec2.x = *((int *)value1);
+      data.value.vec2.y = *((int *)value2);
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    default:
+      break;
+  }
+
+  fclose(pFile);
+}
+
+FileData readData(const char destination_file[], const char id[]) {
+  FILE *pFile = fopen(destination_file, "rb");
+  if (!pFile) {
+    FileData empty = {0};
+    return empty;
+  }
+
+  FileData buffer;
+  while (fread(&buffer, ENTRY_SIZE, 1, pFile) == 1) {
+    if (!strncmp(buffer.id, id, ENTRY_ID_SIZE)) {
+      fclose(pFile);
+      return buffer;
+    }
+  }
+
+  fclose(pFile);
+  FileData empty = {0};
+  return empty;
 }
 
 /*
  * Other necessary functions (currently none)
  */
-
 
 void doFade() {
   if(r == 1)
@@ -532,6 +657,7 @@ void loadResources() {
   iLoadFramesFromSheet(walk_right_frames, "assets/game_screen/character_spritesheets/walk_right.png", 1, 8);
   iLoadFramesFromSheet(walk_front_frames, "assets/game_screen/character_spritesheets/walk_front.png", 1, 8);
   iLoadFramesFromSheet(walk_back_frames, "assets/game_screen/character_spritesheets/walk_back.png", 1, 8);
+  iLoadFramesFromSheet(anim_start_player, "assets/game_screen/character_spritesheets/anim_start_player.png", 1, 8);
 	iChangeSpriteFrames(&idle_left, idle_left_frames, 8);
   iChangeSpriteFrames(&idle_right, idle_right_frames, 8);
   iChangeSpriteFrames(&idle_front, idle_front_frames, 8);
@@ -540,6 +666,7 @@ void loadResources() {
   iChangeSpriteFrames(&walk_right, walk_right_frames, 8);
   iChangeSpriteFrames(&walk_front, walk_front_frames, 8);
   iChangeSpriteFrames(&walk_back, walk_back_frames, 8);
+  iChangeSpriteFrames(&anim_start, anim_start_player, 8);
   iLoadImage(&player_hitbox_image, "assets/game_screen/character_spritesheets/player_hitbox.png");
   iChangeSpriteFrames(&player_hitbox, &player_hitbox_image, 1);
   iLoadImage(&cave_collision_box_image, "assets/game_screen/cave_collision_box.png");
@@ -548,6 +675,7 @@ void loadResources() {
 }
 
 void animate_player() {
+  iAnimateSprite(&anim_start);
   switch (character_direction * 2 + is_moving) {
     case 0:
       iAnimateSprite(&idle_left);
@@ -622,14 +750,14 @@ void countTime() {
 
 void showTime() {
   if (isGameRunning) {
-        mins = secPassed / 60;
-        sec = secPassed % 60;
-        hours = mins/60;
-        char timeText[20];
-        sprintf(timeText, "%02d:%02d:%02d", hours, mins, sec);
-        iSetColor(255,255,0);
-        iShowText(800, 580, timeText, CUSTOM_FONT, 18);
-    }
+    mins = secPassed / 60;
+    sec = secPassed % 60;
+    hours = mins/60;
+    char timeText[20];
+    sprintf(timeText, "%02d:%02d:%02d", hours, mins, sec);
+    iSetColor(255,255,0);
+    iShowText(800, 580, timeText, CUSTOM_FONT, 18);
+  }
 }
 
 typedef struct {
@@ -641,17 +769,17 @@ typedef struct {
 // ekn player structure er ekta array lagbe! 
 player leaderboard[MAXENTRIES];
 
-void prompt_screen() {
-  iClear();
+void prompt_screen() { //index 20
   iSetColor(75, 54, 33);
   iShowImage(0,0,"assets/backgrounds/story_bg.png");
   if (!isNameGiven) {
-        iShowText(100, 400, "ENTER YOUR NAME : ", CUSTOM_FONT, 18);
-        iShowText(290, 400, playerName, CUSTOM_FONT, 18);
-        iShowText(100, 300, "Press ENTER to start", CUSTOM_FONT, 18);
-    } else {
-        current_screen = 10;
-    }
+    iShowText(100, 350, "Enter your name: ", CUSTOM_FONT, 18);
+    iShowText(330, 350, temp_player_name, CUSTOM_FONT, 18);
+    iShowText(100, 300, "Maximum characters: 30", CUSTOM_FONT, 18);
+    iShowText(100, 275, "Press 'ENTER' to continue or 'Esc' to go back", CUSTOM_FONT, 18);
+  } else {
+    current_screen = 10;
+  }
 }
 
 void showLeaderboard() {
