@@ -25,3 +25,41 @@ Under Construction - 100
 	Back = 0
 
 	Keyboard 'Esc'
+
+/**********/
+/* Backup */
+/**********/
+
+
+void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 100
+    char texture_path[100] = "assets/buttons/toggle_";
+    static bool was_pressed = false;
+
+    bool is_inside = (mouse_x >= pos_x && mouse_x <= pos_x + width && mouse_y >= pos_y && mouse_y <= pos_y + height);
+    bool is_checked = (*var_name == var_value);
+
+    int state = 0;
+    if (is_checked) state = is_inside ? 1 : 0;
+    else            state = is_inside ? 3 : 2;
+
+    switch (state) {
+        case 0: strcat(texture_path, "checked.png"); break;
+        case 1: strcat(texture_path, "checked_hover.png"); break;
+        case 2: strcat(texture_path, "unchecked.png"); break;
+        case 3: strcat(texture_path, "unchecked_hover.png"); break;
+    }
+
+    iShowImage(pos_x, pos_y, texture_path);
+
+    if (is_inside && is_left_button) {
+        was_pressed = true;
+    } else if (was_pressed) {
+        if (is_inside) {
+            *var_name = is_checked ? 0 : var_value;
+            if (make_sound) {
+                iPlaySound("assets/sounds/button_click.wav", false, 80);
+            }
+        }
+        was_pressed = false;
+    }
+}

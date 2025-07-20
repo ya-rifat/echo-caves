@@ -26,19 +26,11 @@ typedef enum {
 
 typedef struct {
   char id[ENTRY_ID_SIZE];
-  FileDataType type;
-  int x;
-  int y;
-} Vec2;
-
-typedef struct {
-  char id[ENTRY_ID_SIZE];
-  FileDataType type;
   union {
     int int_num;
     float float_num;
-    Vec2 vec2;
-    char string[64];
+    struct { int x, y; } vec2;
+    char string[68];
   } value;
 } FileData;
 
@@ -61,11 +53,11 @@ void countTime();
 void showTime();
 void updateLeaderboard(char []);
 void writeData(const char destination_file[], FileDataType type_of_data, const char id[], void *value1, void *value2 = nullptr);
-FileData readData(const char destination_file[], const char id[]);
+FileData readData(const char source_file[], const char id[]);
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
-void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound = 1);
+void toggle(const char toggle_name[], int pos_x, int pos_y, bool *var_name, int make_sound = 1);
 
 // time count korar jonno variable
 int isGameRunning, hours, mins, sec, secPassed = 0;
@@ -75,9 +67,9 @@ int nameLength = 0;
 char playerName[30], temp_player_name[30];
 bool isNameGiven;
 
-// music 
-int music_setting = 1;
-int bgm;
+//sound control and channels
+bool background_music_setting;
+int background_music;
 
 //Images
 Image reveal, cave_background;
@@ -100,14 +92,17 @@ bool button_click; //button click detector
 //screen tracker
 int current_screen = 0;
 
-//for sound control
-bool button_sound;
-
 //player position
-int position_x = 70, position_y = 344; //todo: initialize with saved position
+int position_x = 100, position_y = 344; //todo: initialize with saved position
 int background_position_x = -55, background_position_y = -600;
 
 void iDraw() {
+  //setups that need to be done every frame
+  switch (background_music_setting) {
+    case true: iResumeSound(background_music); break;
+    case false: iPauseSound(background_music); break;
+  }
+
 	iClear();
 
 	switch (current_screen) {
@@ -146,7 +141,7 @@ void iMouseMove(int mx, int my) {
 //mouse drag and move
 void iMouseDrag(int mx, int my) {}
 
-void iMouse(int button, int state, int mx, int my) {
+void iMouseClick(int button, int state, int mx, int my) {
   is_state_down = state == GLUT_DOWN;
   is_state_up = state == GLUT_UP;
   is_left_button = button == GLUT_LEFT_BUTTON;
@@ -171,8 +166,6 @@ void iKeyPress(unsigned char key) {
           isGameRunning = 0;
           updateLeaderboard(playerName);
           secPassed = 0;
-          // if(music_setting != 0)
-          //   iIncreaseVolume(bgm, 100);
           current_screen = 0;
           break;
         case ' ':
@@ -285,14 +278,15 @@ int main(int argc, char *argv[]) {
 
   //variable data initialization from settings file
   FileData playerNameData = readData(SETTINGS_FILE, "player_name");
-  strcpy(playerName, playerNameData.value.string);
+  strcpy(playerName, playerNameData.value.string[0] == '\0' ? "Player" : playerNameData.value.string);
   // isNameGiven = (bool)strcmp(playerName, "Player");
+  background_music_setting = !readData(SETTINGS_FILE, "background_music_setting").value.int_num;
 
   //Images are to be loaded only once
   loadResources();
 
   iSetSpritePosition(&anim_start, 150, 200);
-  bgm = iPlaySound("assets/sounds/Numb.wav", true, 60);
+  background_music = iPlaySound("assets/sounds/Numb.wav", true, 50);
 	iOpenWindow(900, 600, "Echo Caves");
 	return 0;
 }
@@ -328,7 +322,7 @@ void startScreen() { //index 0
 }
 
 void game_screen() { //* HIGHLIGHTED
-  iDecreaseVolume(bgm, 100);
+  iPauseSound(background_music);
   isGameRunning = 1;
   if(r == 1)
   iShowLoadedImage(background_position_x, background_position_y, &cave_background);
@@ -387,21 +381,13 @@ void storyScreen() { //index 4
 }
 
 void settings_screen() { //index 1
-  int init_music_setting = music_setting;
   iSetColor(75, 54, 33);
   iShowImage(0,0,"assets/backgrounds/story_bg.png");
-  toggle(500, 450, 64, 64, &music_setting, 1, 1);
-  
-  if(music_setting != init_music_setting){
-    init_music_setting = music_setting;
-    if(music_setting == 0)
-      iDecreaseVolume(bgm, 100);
-    else 
-      iIncreaseVolume(bgm, 100);
-  }
+  iShowText(375, 500, "settings", CUSTOM_FONT, 24);
+  toggle("background_music_setting", 675, 430, &background_music_setting);
   char msg[50];
-  sprintf(msg, "SOUND : %s", music_setting ? "ON" : "OFF");
-  iShowText(370, 450, msg, CUSTOM_FONT, 18);
+  sprintf(msg, "background music: %s", background_music_setting ? "ON" : "OFF");
+  iShowText(175, 440, msg, CUSTOM_FONT, 18);
 }
 
 void underConstruction() { //screen index 100
@@ -426,6 +412,7 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
    */
 
   int state = 0;
+  static bool button_sound = false;
   char texture_path[100] = "assets/buttons/";
   strcat(texture_path, texture_name);
 
@@ -460,97 +447,82 @@ void button(const char texture_name[], int pos_x, int pos_y, int width, int heig
   iShowImage(pos_x, pos_y, texture_path);
 }
 
-// void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 200
+void toggle(const char toggle_name[], int pos_x, int pos_y, bool *var_name, int make_sound) { //toggle_name will be used to store and retrieve data from file, max length of texture path is 100
   
-//   /* Notes before using
-//    * Kind of same as button
-//    */
+  /* Notes before using
+   * Kind of same as button
+   * Use boolean variable for var_name
+   */
 
-//   int state = 0; //0, 2 initialization
-//   char texture_path[100] = "assets/buttons/toggle_";
+  static bool hasRun = false;
+  if (!hasRun) {
+    FileData data = readData(SETTINGS_FILE, toggle_name);
+    *var_name = !readData(SETTINGS_FILE, toggle_name).value.int_num;
+    hasRun = true;
+  }
 
-//   if ((mouse_x > pos_x && mouse_x < (pos_x + width)) && (mouse_y > pos_y && mouse_y < (pos_y + height))) {
-//     state = (state / 2) + 1;
+  static int state = readData(SETTINGS_FILE, toggle_name).value.int_num * 2; //0, 1 initialization
+  char texture_path[100] = "assets/buttons/toggle_";
+  static bool button_sound = false;
+  static bool was_clicked = false;
 
-//     if (is_left_button) {
-//       if (is_state_down) {
-//         state = state + 1;
-//         button_click = true;
-//         if (!button_sound && make_sound) {
-//           iPlaySound("assets/sounds/button_click.wav", false, 80);
-//           button_sound = true;
-//         }
-//       } else if (is_state_up) {
-//         *var_name = var_value;
-//         button_sound =  false;
-//         button_click = false;
-
-//         is_state_up = false;
-//         is_state_down = false;
-//         is_left_button = false;
-//       }
-//     }
-//   } else state = 0;
-
-//   switch (state) {
-//     case 0: //checked
-//       strcat(texture_path, "checked.png");
-//       iShowImage(pos_x, pos_y, texture_path);
-//       break;
-//     case 1: //checked_hover
-//       strcat(texture_path, "checked_hover.png");
-//       iShowImage(pos_x, pos_y, texture_path);
-//       break;
-//     case 2: //unchecked
-//       strcat(texture_path, "unchecked.png");
-//       iShowImage(pos_x, pos_y, texture_path);
-//       break;
-//     case 3: //unchecked_hover
-//       strcat(texture_path, "unchecked_hover.png");
-//       iShowImage(pos_x, pos_y, texture_path);
-//       break;
-//     default:
-//       break;
-//   }
-// }
-void toggle(int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int make_sound) { //max length of texture path is 100
-    char texture_path[100] = "assets/buttons/toggle_";
-    static bool was_pressed = false;
-
-    bool is_inside = (mouse_x >= pos_x && mouse_x <= pos_x + width && mouse_y >= pos_y && mouse_y <= pos_y + height);
-    bool is_checked = (*var_name == var_value);
-
-    int state = 0;
-    if (is_checked) state = is_inside ? 1 : 0;
-    else            state = is_inside ? 3 : 2;
-
+  if ((mouse_x > pos_x && mouse_x < (pos_x + 58)) && (mouse_y > pos_y && mouse_y < (pos_y + 32))) {
     switch (state) {
-        case 0: strcat(texture_path, "checked.png"); break;
-        case 1: strcat(texture_path, "checked_hover.png"); break;
-        case 2: strcat(texture_path, "unchecked.png"); break;
-        case 3: strcat(texture_path, "unchecked_hover.png"); break;
+      case 0: state = 1; break;
+      case 2: state = 3; break;
     }
 
-    iShowImage(pos_x, pos_y, texture_path);
-
-    if (is_inside && is_left_button) {
-        was_pressed = true;
-    } else if (was_pressed) {
-        if (is_inside) {
-            *var_name = is_checked ? 0 : var_value;
-            if (make_sound) {
-                iPlaySound("assets/sounds/button_click.wav", false, 80);
-            }
+    if (is_left_button) {
+      if (is_state_down) {
+        if (!was_clicked) {
+          switch (state) {
+            case 1: state = 3; break;
+            case 3: state = 1; break;
+          }
+          int save_state = (state - 1) / 2;
+          writeData(SETTINGS_FILE, TYPE_INTEGER, toggle_name, &save_state);
+          was_clicked = true;
         }
-        was_pressed = false;
+        if (!button_sound && make_sound) {
+          iPlaySound("assets/sounds/button_click.wav", false, 80);
+          button_sound = true;
+        }
+        button_click = true;
+      } else if (is_state_up) {
+        switch (state) {
+          case 1: *var_name = true; break;
+          case 3: *var_name = false; break;
+        }
+        was_clicked = false;
+        button_sound =  false;
+        button_click = false;
+
+        //reset mouse states
+        is_state_up = false;
+        is_state_down = false;
+        is_left_button = false;
+      }
     }
+  } else switch (state) {
+    case 1: state = 0; break;
+    case 3: state = 2; break;
+  }
+
+  switch (state) {
+    case 0: strcat(texture_path, "checked.png"); break;
+    case 1: strcat(texture_path, "checked_hover.png"); break;
+    case 2: strcat(texture_path, "unchecked.png"); break;
+    case 3: strcat(texture_path, "unchecked_hover.png"); break;
+  }
+
+  iShowImage(pos_x, pos_y, texture_path);
 }
 
 /*
  * Read and Write Functions
  **************************
  * enum - destination_file: SETTINGS_FILE, ...
- * enum - type_of_data: toggle_state, ...
+ * enum - type_of_data: TYPE_STRING, TYPE_INT, ...
  * string - id: any name
  * pointer - value1, value2, ...
  */
@@ -562,24 +534,25 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
 
   FileData buffer;
   long offset = 0;
-  FileData data;
+  FileData data = {0};
   bool is_match_found = false;
 
   while (fread(&buffer, ENTRY_SIZE, 1, pFile) == 1) {
     if (!strncmp(buffer.id, id, 32)) {
       is_match_found = true;
-      fseek(pFile, offset, SEEK_SET);
+      fseek(pFile, offset, SEEK_SET); // Rewind to start of this record
       break;
     }
     offset += ENTRY_SIZE;
-    fseek(pFile, offset, SEEK_SET);
   }
+
+  if (!is_match_found)
+    fseek(pFile, 0, SEEK_END);
 
   switch (type_of_data) {
     case TYPE_INTEGER:
       strncpy(data.id, id, ENTRY_ID_SIZE - 1);
       data.id[ENTRY_ID_SIZE - 1] = '\0';
-      data.type = TYPE_INTEGER;
       data.value.int_num = *(int *)value1;
       fwrite(&data, ENTRY_SIZE, 1, pFile);
       break;
@@ -587,7 +560,6 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
     case TYPE_STRING:
       strncpy(data.id, id, ENTRY_ID_SIZE - 1);
       data.id[ENTRY_ID_SIZE - 1] = '\0';
-      data.type = TYPE_STRING;
       strncpy(data.value.string, (char *)value1, sizeof(data.value.string) - 1);
       data.value.string[sizeof(data.value.string) - 1] = '\0';
       fwrite(&data, ENTRY_SIZE, 1, pFile);
@@ -596,7 +568,6 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
     case TYPE_FLOAT:
       strncpy(data.id, id, ENTRY_ID_SIZE - 1);
       data.id[ENTRY_ID_SIZE - 1] = '\0';
-      data.type = TYPE_FLOAT;
       data.value.float_num = *(float *)value1;
       fwrite(&data, ENTRY_SIZE, 1, pFile);
       break;
@@ -604,7 +575,6 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
     case TYPE_VEC2:
       strncpy(data.id, id, ENTRY_ID_SIZE - 1);
       data.id[ENTRY_ID_SIZE - 1] = '\0';
-      data.type = TYPE_VEC2;
       data.value.vec2.x = *((int *)value1);
       data.value.vec2.y = *((int *)value2);
       fwrite(&data, ENTRY_SIZE, 1, pFile);
@@ -617,10 +587,10 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
   fclose(pFile);
 }
 
-FileData readData(const char destination_file[], const char id[]) {
-  FILE *pFile = fopen(destination_file, "rb");
+FileData readData(const char source_file[], const char id[]) {
+  FILE *pFile = fopen(source_file, "rb");
+  FileData empty = {0};
   if (!pFile) {
-    FileData empty = {0};
     return empty;
   }
 
@@ -633,7 +603,6 @@ FileData readData(const char destination_file[], const char id[]) {
   }
 
   fclose(pFile);
-  FileData empty = {0};
   return empty;
 }
 
