@@ -29,7 +29,9 @@ typedef enum {
   TYPE_FLOAT = 3,
   TYPE_VEC2 = 4,
   TYPE_LEADERBOARD = 5,
-  TYPE_WAYPOINTS = 6
+  TYPE_WAYPOINTS = 6,
+  TYPE_CLAIMS = 7,
+  TYPE_STARS = 8
 } FileDataType;
 
 enum Screen {
@@ -65,11 +67,13 @@ typedef struct {
   char id[ENTRY_ID_SIZE];
   union {
     int int_num;
+    int star_claim[MAX_STARS]; //3
     float float_num;
     char string[68];
     Vec2 vec2;
     LeaderboardData leaderboard;
-    Vec2 waypoint[8];
+    Vec2 waypoint[8]; //1
+    Vec2 star_location[MAX_STARS]; //2
   } value;
 } FileData;
 
@@ -99,7 +103,7 @@ void read_saved_game();
 void animate_stuff();
 void loadResources();
 void doFade();
-void game_escape(int escape = PAUSE);
+void game_escape(int escape = PAUSE, bool bgm = true);
 void reset_game();
 bool spawn_monster();
 void clear_file_data(const char file[]);
@@ -112,7 +116,7 @@ bool check_los(Vec2 from, Vec2 to);
 void countTime();
 void updateLeaderboard();
 void writeData(const char destination_file[], FileDataType type_of_data, const char id[], void *value1, void *value2 = nullptr);
-FileData readData(const char source_file[], const char id[], bool is_array = false);
+FileData readData(const char source_file[], const char id[], int array_type = 0);
 
 /* Components */
 void button(const char texture_name[], int pos_x, int pos_y, int width, int height, int *var_name, int var_value, int has_state = 1, int make_sound = 1);
@@ -122,6 +126,7 @@ void toggle(const char toggle_name[], int pos_x, int pos_y, bool *var_name, int 
 int hours, mins, sec, secPassed = 0;
 int loading_destination, prompt_source, level_init;
 int current_level = 1, monster_state = 0, stars_collected = 0;
+Vec2 star_locations[MAX_STARS] = {0}, level_escape_pos; int star_claimed[MAX_STARS] = {0};
 /* position */
 Vec2 player_pos, background_pos, monster_pos = {200, 344}; //todo
 Vec2 waypoints[MAX_WAYPOINTS];
@@ -147,8 +152,10 @@ bool background_music_setting;
 int background_music, running_sound;
 
 //Images and Sprites
-Image current_background;
-Image reveal, cave_background, loading_image[10], player_pointer, monster_pointer, star_image;
+Image current_background, star_image_map, star_collision_image, stars[MAX_STARS];
+Sprite star_collision, star_collision_boxes[MAX_STARS], level_escape;
+Image reveal, cave_background;
+Image loading_image[10], player_pointer, monster_pointer, star_image;
 Image player_hitbox_image, cave_collision_box_image, timer_background, los_checker_image, monster_hitbox_image;
 Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8], anim_start_player[8];
 Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back, anim_start;
@@ -431,8 +438,12 @@ void game_screen() {
     animation_direction = 2;
   else
     animation_direction = 1;
+  
+  for (int i = 0; i < MAX_STARS; i++)
+    if ((player_pos.y < star_locations[i].y))
+      iShowLoadedImage(star_locations[i].x, star_locations[i].y, &stars[i]);
 
-  if (player_pos.y < monster_pos.y)
+  if (player_pos.y < monster_pos.y) {
     switch (monster_state * animation_direction) {
       case 0:
         iSetSpritePosition(&monster_idle, monster_pos.x, monster_pos.y);
@@ -447,6 +458,7 @@ void game_screen() {
         iShowSprite(&monster_walk_right);
         break;
     }
+  }
 
   switch (character_direction * 2 + is_moving) {
     case 0:
@@ -485,6 +497,10 @@ void game_screen() {
       break;
   }
 
+  for (int i = 0; i < MAX_STARS; i++)
+    if (!(player_pos.y < star_locations[i].y))
+      iShowLoadedImage(star_locations[i].x, star_locations[i].y, &stars[i]);
+
   if (!(player_pos.y < monster_pos.y))
     switch (monster_state * animation_direction) {
       case 0:
@@ -501,6 +517,9 @@ void game_screen() {
         break;
     }
   
+  for (int i = 0; i < MAX_STARS; i++)
+    iSetSpritePosition(&star_collision_boxes[i], star_locations[i].x, star_locations[i].y);
+
   //debug
   // iShowSprite(&cave_collision_box);
   // iShowSprite(&player_hitbox);
@@ -510,9 +529,12 @@ void game_screen() {
   // check_los(monster_pos, player_pos);
   // for (int i = 0; i < MAX_WAYPOINTS; i++)
   //   iShowLoadedImage(waypoints[i].x, waypoints[i].y, &waypoints_debug);
-  
-  if (!is_revealed) iFilledRectangle(0, 0, 900, 600);
-  if (is_revealed) iShowLoadedImage(player_pos.x - 785, player_pos.y - 470, &reveal);
+  iShowSpeed(10, 300);
+  iShowSprite(&level_escape);
+
+  iSetSpritePosition(&level_escape, level_escape_pos.x, level_escape_pos.y);
+  // if (!is_revealed) iFilledRectangle(0, 0, 900, 600);
+  // if (is_revealed) iShowLoadedImage(player_pos.x - 785, player_pos.y - 470, &reveal);
   iShowLoadedImage(player_pos.x + 16, player_pos.y + 65, &player_pointer);
   iShowLoadedImage(monster_pos.x + 12, monster_pos.y + 65, &monster_pointer);
   showTime();
@@ -600,7 +622,7 @@ void game_over() { //-done
       loading_destination = GAME_SCREEN;
       current_screen = LOADING;
       break;
-    case 1: sound_played = false; current_screen = START; break;
+    case 1: sound_played = false; game_escape(START); break;
   }
 }
 
@@ -641,7 +663,7 @@ void level_up() {
     button("main_menu", 320, 138, 270, 60, &button_action, 1);
     switch (button_action) {
       case 0: sound_played = false; current_screen = PLAY; stars_collected = 0; break;
-      case 1: save_game(); current_screen = START; break;
+      case 1: save_game(); game_escape(START); break;
     }
     monster_state = 0;
     for (int i = 0; i < MAX_WAYPOINTS; i++) {
@@ -652,9 +674,16 @@ void level_up() {
   switch (current_level) { //todo
     case 1:
       if (level_init != 2) { 
-        player_pos = {100, 344};
-        background_pos = {-55, -600};
+        player_pos = {100, 300};
+        background_pos = {0, -575};
         stars_collected = 0;
+        character_direction = 1;
+        star_locations[0] = {620, 410};
+        star_locations[1] = {1250, 440};
+        star_locations[2] = {1275, -60};
+        star_locations[3] = {1003, -155};
+        star_locations[4] = {50, -300};
+        level_escape_pos = {285, -580};
       }
       current_background = cave_background;
       if (!level_init) current_level = 2;
@@ -976,10 +1005,24 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
     case TYPE_WAYPOINTS: 
       strncpy(data.id, id, ENTRY_ID_SIZE - 1);
       data.id[ENTRY_ID_SIZE - 1] = '\0';
-      for (int i = 0; i < MAX_WAYPOINTS - 2; i++) {
-        data.value.waypoint[i].x = waypoints[i].x;
-        data.value.waypoint[i].y = waypoints[i].y;
-      }
+      for (int i = 0; i < MAX_WAYPOINTS - 2; i++)
+        data.value.waypoint[i] = waypoints[i];
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    case TYPE_STARS:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      for (int i = 0; i < MAX_STARS; i++)
+        data.value.star_location[i] = star_locations[i];
+      fwrite(&data, ENTRY_SIZE, 1, pFile);
+      break;
+
+    case TYPE_CLAIMS:
+      strncpy(data.id, id, ENTRY_ID_SIZE - 1);
+      data.id[ENTRY_ID_SIZE - 1] = '\0';
+      for (int i = 0; i < MAX_STARS; i++)
+        data.value.star_claim[i] = star_claimed[i];
       fwrite(&data, ENTRY_SIZE, 1, pFile);
       break;
 
@@ -990,7 +1033,7 @@ void writeData(const char destination_file[], FileDataType type_of_data, const c
   fclose(pFile);
 }
 
-FileData readData(const char source_file[], const char id[], bool is_array) {
+FileData readData(const char source_file[], const char id[], int array_type) {
   FILE *pFile = fopen(source_file, "rb");
   FileData empty = {0};
   if (!pFile) return empty;
@@ -1006,11 +1049,17 @@ FileData readData(const char source_file[], const char id[], bool is_array) {
   }
 
   if (is_match_found) {
-    if (is_array) {
-      for (int i = 0; i < MAX_WAYPOINTS - 2; i++) {
-        waypoints[i].x = buffer.value.waypoint[i].x;
-        waypoints[i].y = buffer.value.waypoint[i].y;
-      }
+    if (array_type == 1) {
+      for (int i = 0; i < MAX_WAYPOINTS - 2; i++)
+        waypoints[i] = buffer.value.waypoint[i];
+      return buffer;
+    } if (array_type == 2) {
+      for (int i = 0; i < MAX_STARS; i++)
+        star_locations[i] = buffer.value.star_location[i];
+      return buffer;
+    } else if (array_type == 3) {
+      for (int i = 0; i < MAX_STARS; i++)
+        star_claimed[i] = buffer.value.star_claim[i];
       return buffer;
     } else {
       fclose(pFile);
@@ -1039,6 +1088,11 @@ void loadResources() { //-done
   iLoadImage(&player_pointer, "assets/game_screen/player_pointer.png");
   iLoadImage(&monster_pointer, "assets/game_screen/monster_pointer.png");
   iLoadImage(&star_image, "assets/game_screen/star.png");
+  iLoadImage(&star_image_map, "assets/game_screen/star_level.png");
+  iLoadImage(&star_collision_image, "assets/game_screen/star_collision.png");
+  iChangeSpriteFrames(&star_collision, &star_collision_image, 1);
+  level_escape = star_collision;
+  for (int i = 0; i < MAX_STARS; i++) stars[i] = star_image_map, star_collision_boxes[i] = star_collision;
   iLoadFramesFromSheet(idle_left_frames, "assets/game_screen/character_spritesheets/idle_left.png", 1, 8);
   iLoadFramesFromSheet(idle_right_frames, "assets/game_screen/character_spritesheets/idle_right.png", 1, 8);
   iLoadFramesFromSheet(idle_front_frames, "assets/game_screen/character_spritesheets/idle_front.png", 1, 8);
@@ -1089,7 +1143,7 @@ void animate_stuff() { //-done
   switch (monster_state * animation_direction) {
     case 0:
       iAnimateSprite(&monster_idle);
-      if (frame_count > 12) iMirrorSprite(&monster_idle, HORIZONTAL), frame_count = 0;
+      if (frame_count > 18) iMirrorSprite(&monster_idle, HORIZONTAL), frame_count = 0;
       break;
     case 1:
       iAnimateSprite(&monster_walk_left);
@@ -1144,7 +1198,8 @@ void move_player(int direction) { //-done
   }
 
   iSetSpritePosition(&player_hitbox, tentative_x, tentative_y);
-  if (!iCheckCollision(&cave_collision_box, &player_hitbox)) {
+  if (iCheckCollision(&level_escape, &player_hitbox) && stars_collected == 5) level_init = 0, game_escape(LEVEL_UP, false);
+  if (!iCheckCollision(&cave_collision_box, &player_hitbox) && !iCheckCollision(&level_escape, &player_hitbox)) {
     player_pos.x = tentative_x;
     player_pos.y = tentative_y;
   }
@@ -1172,6 +1227,10 @@ void move_player(int direction) { //-done
     offset = dy = -PLAYER_SPEED;
     offset_direction = 1;
   }
+
+  for (int i = 0; i < MAX_STARS; i++)
+    if(iCheckCollision(&player_hitbox, &star_collision_boxes[i]))
+      star_claimed[i] = 1, star_locations[i] = {-100, -100}, stars_collected++, iPlaySound("assets/sounds/collect_star.wav", false, 50);
 
   iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
   iSetSpritePosition(&cave_collision_box, background_pos.x, background_pos.y);
@@ -1251,7 +1310,7 @@ void monster_ai() {
     }
   } else {
     monster_pos = monster_target;
-    game_escape(GAME_OVER);
+    game_escape(GAME_OVER, false);
   }
 
   iSetSpritePosition(&monster_hitbox, monster_pos.x, monster_pos.y);
@@ -1271,11 +1330,20 @@ void update_waypoints() { //-done
 }
 
 void offset_waypoints(int offset, int direction) { //-done
+  switch (direction) {
+    case 0: level_escape_pos.x += offset; break;
+    case 1: level_escape_pos.y += offset; break;
+  }
   for (int i = 0; i < MAX_WAYPOINTS; i++)
     switch (direction) {
       case 0: waypoints[i].x += offset; break;
       case 1: waypoints[i].y += offset; break;
     }
+  for (int i = 0; i < 5; i++)
+    switch (direction) {
+      case 0: if (!star_claimed[i]) star_locations[i].x += offset; break;
+      case 1: if (!star_claimed[i]) star_locations[i].y += offset; break;
+  }
 }
 
 void offset_monster(float dx, float dy, int direction) { //-done
@@ -1335,11 +1403,14 @@ void save_game() {
   writeData(GAME_DATA, TYPE_INTEGER, "current_level", &current_level);
   writeData(GAME_DATA, TYPE_INTEGER, "monster_state", &monster_state);
   writeData(GAME_DATA, TYPE_INTEGER, "seconds_passed", &secPassed);
-  writeData(GAME_DATA, TYPE_INTEGER, "stars_collected", &stars_collected);
+  writeData(GAME_DATA, TYPE_INTEGER, "character_direction", &character_direction);
   writeData(GAME_DATA, TYPE_VEC2, "background_pos", &background_pos.x, &background_pos.y);
   writeData(GAME_DATA, TYPE_VEC2, "player_pos", &player_pos.x, &player_pos.y);
   writeData(GAME_DATA, TYPE_VEC2, "monster_pos", &monster_pos.x, &monster_pos.y);
+  writeData(GAME_DATA, TYPE_VEC2, "level_escape_pos", &level_escape_pos.x, &level_escape_pos.y);
   writeData(GAME_DATA, TYPE_WAYPOINTS, "waypoints", NULL);
+  writeData(GAME_DATA, TYPE_STARS, "star_locations", NULL);
+  writeData(GAME_DATA, TYPE_CLAIMS, "star_claims", NULL);
 }
 
 void read_saved_game() {
@@ -1350,8 +1421,8 @@ void read_saved_game() {
     monster_state = data.value.int_num;
     data = readData(GAME_DATA, "seconds_passed");
     secPassed = data.value.int_num;
-    data = readData(GAME_DATA, "stars_collected");
-    stars_collected = data.value.int_num;
+    data = readData(GAME_DATA, "character_direction");
+    character_direction = data.value.int_num;
     data = readData(GAME_DATA, "background_pos");
     background_pos.x = data.value.vec2.x;
     background_pos.y = data.value.vec2.y;
@@ -1361,7 +1432,16 @@ void read_saved_game() {
     data = readData(GAME_DATA, "monster_pos");
     monster_pos.x = data.value.vec2.x;
     monster_pos.y = data.value.vec2.y;
-    readData(GAME_DATA, "waypoints", true);
+    data = readData(GAME_DATA, "level_escape_pos");
+    level_escape_pos.x = data.value.vec2.x;
+    level_escape_pos.y = data.value.vec2.y;
+    readData(GAME_DATA, "waypoints", 1);
+    readData(GAME_DATA, "star_locations", 2);
+    readData(GAME_DATA, "star_claims", 3);
+    stars_collected = 0;
+    for (int i = 0; i < MAX_STARS; i++) {
+      if (star_claimed[i]) stars_collected++;
+    }
     level_init = 2;
   } else {
     level_init = 1;
@@ -1378,22 +1458,23 @@ void reset_game() {
   sec = 0;
   stars_collected = 0;
   monster_pos = {-100, -100};
-  for (int i = 0; i < MAX_WAYPOINTS; i++) {
+  for (int i = 0; i < MAX_WAYPOINTS; i++)
     waypoints[i] = {0, 0};
-  }
+  for (int i = 0; i < MAX_STARS; i++)
+    star_claimed[i] = 0;
 }
 
 void clear_file_data(const char file[]) { //-done
-  FILE *pFile = fopen(file, "w");
+  FILE *pFile = fopen(file, "wb");
   if (pFile != NULL) {
     fclose(pFile);
   } else current_screen = ERROR_SCREEN; return;
 }
 
-void game_escape(int escape) {
+void game_escape(int escape, bool bgm) {
   iSpecialKeyRelease(GLUT_KEY_END);
   iPauseTimer(monster_update);
-  if (background_music_setting) iResumeSound(background_music);
+  if (background_music_setting && bgm) iResumeSound(background_music);
   current_screen = escape;
 }
 
