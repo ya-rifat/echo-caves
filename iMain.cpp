@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
   background_music_setting = readData(SETTINGS_FILE, "background_music_setting").value.int_num;
   FileData difficulty_data = readData(SETTINGS_FILE, "difficulty_level");
   difficulty = difficulty_data.value.int_num;
-  MONSTER_SPEED = difficulty ? 4 : 3.5;
+  MONSTER_SPEED = difficulty ? 3.5 : 3;
   LOS_STEP = MONSTER_SPEED;
 
   //Images are to be loaded only once
@@ -580,7 +580,7 @@ void settings_screen() { //-done
   temp_check = difficulty;
   button("empty", 625, 355, 120, 25, &difficulty, !difficulty, 0);
   if (difficulty != temp_check) {
-    MONSTER_SPEED = difficulty ? 4 : 3.5;
+    MONSTER_SPEED = difficulty ? 3.5 : 3;
     LOS_STEP = MONSTER_SPEED;
     writeData(SETTINGS_FILE, TYPE_INTEGER, "difficulty_level", &difficulty);
   }
@@ -769,12 +769,14 @@ void play_screen() { //-done
   int button_action = -1;
   button("new_game", 320, 270, 270, 60, &button_action, 0);
   button("continue", 320, 208, 270, 60, &button_action, 1);
+  iShowText(65, 50, "N.B. if you press new game, your previous save will be lost", CUSTOM_FONT, 18);
   switch (button_action) {
     case 0:
       reset_game();
       level_init = 1; 
       level_up();
       loading_destination = GAME_SCREEN;
+      save_game();
       current_screen = LOADING;
       break;
     case 1:
