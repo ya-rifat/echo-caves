@@ -152,14 +152,15 @@ bool background_music_setting;
 int background_music, running_sound;
 
 //Images and Sprites
-Image current_background, star_image_map, star_collision_image, stars[MAX_STARS];
+Image current_background, level_2_design, level_2_collision_image, star_image_map, star_collision_image, stars[MAX_STARS];
+Sprite level_2_collision;
 Sprite star_collision, star_collision_boxes[MAX_STARS], level_escape;
 Image reveal, cave_background;
 Image loading_image[10], player_pointer, monster_pointer, star_image;
 Image player_hitbox_image, cave_collision_box_image, timer_background, los_checker_image, monster_hitbox_image;
 Image walk_front_frames[8], walk_right_frames[8], walk_left_frames[8], walk_back_frames[8], idle_front_frames[8], idle_right_frames[8], idle_left_frames[8], idle_back_frames[8], anim_start_player[8];
 Sprite walk_front, walk_right, walk_left, walk_back, idle_front, idle_right, idle_left, idle_back, anim_start;
-Sprite player_hitbox, cave_collision_box, monster_hitbox, los_checker, loading;
+Sprite player_hitbox, cave_collision_box, monster_hitbox, los_checker, loading, current_collision_box;
 int character_direction = 1; //0 - left, 1 - right, 2 - front(facing the screen), 3 - back
 bool is_moving = false; int is_background_moving = 0; //to detect character movement, if it's not moving play idle animation
 bool is_revealed = false;
@@ -257,6 +258,7 @@ void iKeyPress(unsigned char key) {
           }
           strcpy(playerName, temp_player_name);
           writeData(SETTINGS_FILE, TYPE_STRING, "player_name", playerName);
+          current_screen = prompt_source;
           break;
         case '\b': //backspace
           if (nameLength > 0) {
@@ -521,7 +523,8 @@ void game_screen() {
     iSetSpritePosition(&star_collision_boxes[i], star_locations[i].x, star_locations[i].y);
 
   //debug
-  // iShowSprite(&cave_collision_box);
+  // iShowSprite(&los_checker);
+  // iShowSprite(&current_collision_box);
   // iShowSprite(&player_hitbox);
   // iSetSpritePosition(&monster_temp, monster_pos.x, monster_pos.y);
   // iShowSprite(&monster_temp);
@@ -529,7 +532,7 @@ void game_screen() {
   // check_los(monster_pos, player_pos);
   // for (int i = 0; i < MAX_WAYPOINTS; i++)
   //   iShowLoadedImage(waypoints[i].x, waypoints[i].y, &waypoints_debug);
-  iShowSpeed(10, 300);
+  // iShowSpeed(10, 300);
   iShowSprite(&level_escape);
 
   iSetSpritePosition(&level_escape, level_escape_pos.x, level_escape_pos.y);
@@ -594,8 +597,7 @@ void prompt_screen() { //-done
   iShowText(100, 375, "Enter your name:", CUSTOM_FONT, 18);
   iShowText(330, 375, temp_player_name, CUSTOM_FONT, 18);
   iShowText(100, 300, "Maximum characters: 30", CUSTOM_FONT, 18);
-  iShowText(100, 275, "Press 'ENTER' to continue or 'Esc' to go back to the", CUSTOM_FONT, 18);
-  iShowText(100, 250, "main screen", CUSTOM_FONT, 18);
+  iShowText(100, 275, "Press 'ENTER' to save or 'Esc' to go back", CUSTOM_FONT, 18);
 }
 
 void game_over() { //-done
@@ -648,21 +650,24 @@ void victory_screen() { //-done
 
 void level_up() {
   static bool sound_played = false;
+  bool move_on = false;
   if (!level_init) {
     iSetColor(1, 0, 20);
     iFilledRectangle(0, 0, 900, 600);
     iSetColor(255, 255, 255);
     iShowText(210, 450, "Level Complete!", CUSTOM_FONT, 42);
     iShowText(240, 390, "continue to next level", CUSTOM_FONT, 24);
+    iShowLoadedImage(330, 320, &star_image);
     iShowLoadedImage(380, 320, &star_image);
     iShowLoadedImage(430, 320, &star_image);
     iShowLoadedImage(480, 320, &star_image);
+    iShowLoadedImage(530, 320, &star_image);
     if (!sound_played) iPlaySound("assets/sounds/level_up.mp3", false, 80), sound_played = true;
     int button_action = -1;
     button("continue", 320, 200, 270, 60, &button_action, 0);
     button("main_menu", 320, 138, 270, 60, &button_action, 1);
     switch (button_action) {
-      case 0: sound_played = false; current_screen = PLAY; stars_collected = 0; break;
+      case 0: sound_played = false; stars_collected = 0; current_level++; move_on = true; break;
       case 1: save_game(); game_escape(START); break;
     }
     monster_state = 0;
@@ -683,16 +688,33 @@ void level_up() {
         star_locations[2] = {1275, -60};
         star_locations[3] = {1003, -155};
         star_locations[4] = {50, -300};
-        level_escape_pos = {285, -580};
+        level_escape_pos = {285, -560};
       }
       current_background = cave_background;
-      if (!level_init) current_level = 2;
+      current_collision_box = cave_collision_box;
       break;
     case 2:
+      if (level_init != 2) { 
+        player_pos = {320, 460};
+        background_pos = {-100, -950};
+        stars_collected = 0;
+        character_direction = 2;
+        star_locations[0] = {520, 300};
+        star_locations[1] = {1600, 0};
+        star_locations[2] = {1300, -60};
+        star_locations[3] = {900, -155};
+        star_locations[4] = {150, -700};
+        level_escape_pos = {1310, 220};
+      }
+      current_background = level_2_design;
+      current_collision_box = level_2_collision;
       break;
     case 3:
       break;
   }
+  iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
+  iSetSpritePosition(&current_collision_box, background_pos.x, background_pos.y);
+  if (move_on) current_screen = GAME_SCREEN;
 }
 
 void error_screen() { //-done
@@ -776,6 +798,7 @@ void play_screen() { //-done
       level_init = 1; 
       level_up();
       loading_destination = GAME_SCREEN;
+      clear_file_data(GAME_DATA);
       save_game();
       current_screen = LOADING;
       break;
@@ -1085,6 +1108,7 @@ void doFade() { //-done
 void loadResources() { //-done
   iLoadImage(&reveal, "assets/game_screen/reveal.png");
   iLoadImage(&cave_background, "assets/game_screen/cave_background.png");
+  iLoadImage(&level_2_design, "assets/game_screen/level_2.png");
   iLoadImage(&timer_background, "assets/backgrounds/timer_bg.png");
   iLoadImage(&waypoints_debug, "assets/game_screen/waypoints_debug.png");
   iLoadImage(&player_pointer, "assets/game_screen/player_pointer.png");
@@ -1131,7 +1155,9 @@ void loadResources() { //-done
   iChangeSpriteFrames(&monster_temp, &monster_temp_image, 1);
 
   iLoadImage(&cave_collision_box_image, "assets/game_screen/cave_collision_box.png");
+  iLoadImage(&level_2_collision_image, "assets/game_screen/level_2_collision.png");
   iChangeSpriteFrames(&cave_collision_box, &cave_collision_box_image, 1);
+  iChangeSpriteFrames(&level_2_collision, &level_2_collision_image, 1);
   iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
   iLoadImage(&los_checker_image, "assets/game_screen/los_checker.png");
   iChangeSpriteFrames(&los_checker, &los_checker_image, 1);
@@ -1201,7 +1227,7 @@ void move_player(int direction) { //-done
 
   iSetSpritePosition(&player_hitbox, tentative_x, tentative_y);
   if (iCheckCollision(&level_escape, &player_hitbox) && stars_collected == 5) level_init = 0, game_escape(LEVEL_UP, false);
-  if (!iCheckCollision(&cave_collision_box, &player_hitbox) && !iCheckCollision(&level_escape, &player_hitbox)) {
+  if (!iCheckCollision(&current_collision_box, &player_hitbox)) {
     player_pos.x = tentative_x;
     player_pos.y = tentative_y;
   }
@@ -1235,7 +1261,7 @@ void move_player(int direction) { //-done
       star_claimed[i] = 1, star_locations[i] = {-100, -100}, stars_collected++, iPlaySound("assets/sounds/collect_star.wav", false, 50);
 
   iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
-  iSetSpritePosition(&cave_collision_box, background_pos.x, background_pos.y);
+  iSetSpritePosition(&current_collision_box, background_pos.x, background_pos.y);
   if (use_offset) offset_waypoints(offset, offset_direction), offset_monster(dx, dy, offset_direction);
   update_waypoints();
 }
@@ -1252,7 +1278,7 @@ bool spawn_monster() {
     };
 
     iSetSpritePosition(&monster_hitbox, candidate.x, candidate.y);
-    if (!iCheckCollision(&cave_collision_box, &monster_hitbox) && check_los(candidate, player_pos)) {
+    if (!iCheckCollision(&current_collision_box, &monster_hitbox) && check_los(candidate, player_pos)) {
       monster_pos = candidate;
       monster_state = 1;
       iResumeTimer(monster_update);
@@ -1306,7 +1332,7 @@ void monster_ai() {
     float tentative_y = monster_pos.y + dir_y * MONSTER_SPEED;
 
     iSetSpritePosition(&monster_hitbox, tentative_x, tentative_y);
-    if (!iCheckCollision(&cave_collision_box, &monster_hitbox)) {
+    if (!iCheckCollision(&current_collision_box, &monster_hitbox)) {
       monster_pos.x = tentative_x;
       monster_pos.y = tentative_y;
     }
@@ -1371,15 +1397,12 @@ bool check_los(Vec2 from, Vec2 to) { //-done
 
   for (float traveled = 0; traveled < dist; traveled += LOS_STEP) {
     iSetSpritePosition(&los_checker, current_x, current_y);
-    //debug
-    // iShowSprite(&los_checker);
-    if (iCheckCollision(&cave_collision_box, &los_checker)) {
+    if (iCheckCollision(&current_collision_box, &los_checker)) {
       return false; // blocked
     }
     current_x += dir_x * LOS_STEP;
     current_y += dir_y * LOS_STEP;
   }
-
   return true;
 }
 
