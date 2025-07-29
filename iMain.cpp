@@ -49,6 +49,7 @@ enum Screen {
   ERROR_SCREEN = 11,
   VICTORY = 12,
   LEVEL_UP = 13,
+  CREDITS = 14,
   UNDER_CONSTRUCTION = 100
 };
 int current_screen = START;
@@ -84,6 +85,7 @@ void storyScreen();
 void underConstruction();
 void game_screen();
 void instructions_screen();
+void credits_screen();
 void showLeaderboard();
 void prompt_screen();
 void play_screen();
@@ -153,7 +155,9 @@ int background_music, running_sound;
 
 //Images and Sprites
 Image current_background, level_2_design, level_2_collision_image, star_image_map, star_collision_image, stars[MAX_STARS];
+Image level_3_design, level_3_collision_image;
 Sprite level_2_collision;
+Sprite level_3_collision;
 Sprite star_collision, star_collision_boxes[MAX_STARS], level_escape;
 Image reveal, cave_background;
 Image loading_image[10], player_pointer, monster_pointer, star_image;
@@ -185,6 +189,7 @@ void iDraw() {
     case LEADERBOARD: showLeaderboard(); break;
 		case STORY: storyScreen(); break;
     case INSTRUCTIONS: instructions_screen(); break;
+    case CREDITS: credits_screen(); break;
     case GAME_SCREEN: game_screen(); break;
     case NAME: prompt_screen(); break;
     case PLAY: play_screen(); break;
@@ -240,7 +245,7 @@ void iKeyPress(unsigned char key) {
             echo_sound = true;
             iResumeTimer(reveal_timer);
             srand(time(NULL));
-            bool will_spawn = (rand() % 10) % (difficulty ? 4 : 2) == 0;
+            bool will_spawn = (rand() % 10) % (difficulty ? 2 : 4) == 0;
             if (will_spawn) spawn_monster();
           }
           break;
@@ -346,7 +351,7 @@ void iSpecialKeyPress(unsigned char key) {
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
-  reveal_timer = iSetTimer(7500, doFade);
+  reveal_timer = iSetTimer(1000, doFade);
   monster_update = iSetTimer(35, monster_ai);
   animate_timer = iSetTimer(100, animate_stuff);
   time_count = iSetTimer(1000, countTime);
@@ -355,12 +360,12 @@ int main(int argc, char *argv[]) {
 
   //variable data initialization from settings file
   FileData playerNameData = readData(SETTINGS_FILE, "player_name");
-  isNameGiven = (bool)playerNameData.value.string[0] != '\0';
-  strcpy(playerName, isNameGiven ? "Player" : playerNameData.value.string);
+  isNameGiven = playerNameData.value.string[0] != '\0';
+  strcpy(playerName, !isNameGiven ? "Player" : playerNameData.value.string);
   background_music_setting = readData(SETTINGS_FILE, "background_music_setting").value.int_num;
   FileData difficulty_data = readData(SETTINGS_FILE, "difficulty_level");
   difficulty = difficulty_data.value.int_num;
-  MONSTER_SPEED = difficulty ? 3.5 : 3;
+  MONSTER_SPEED = difficulty ? 3 : 2.5;
   LOS_STEP = MONSTER_SPEED;
 
   //Images are to be loaded only once
@@ -398,6 +403,7 @@ void startScreen() { //-done
   button("story_button", 510, 100, 270, 60, &current_screen, STORY);
 
   button("help_button", 80, 10, 60, 60, &current_screen, INSTRUCTIONS);
+  button("credits", 150, 10, 60, 60, &current_screen, CREDITS);
   int is_exit_pressed;
   button("exit_button", 10, 10, 60, 60, &is_exit_pressed, 1);
   if (is_exit_pressed) iCloseWindow();
@@ -414,20 +420,33 @@ void instructions_screen() { //-done
   button("back2", 15, 540, 40, 40, &current_screen, START, 0);
   iSetColor(255, 255, 255);
   iShowText(320, 550, "instructions", CUSTOM_FONT, 30);
-  iShowText(50, 480, "1. Movement: use arrow keys to move around", CUSTOM_FONT, 18);
-  iShowText(50, 440, "2. Use space key to reveal an area around the player. but", CUSTOM_FONT, 18);
-  iShowText(50, 410, "   be careful there's a chance that the echo will spwan", CUSTOM_FONT, 18);
-  iShowText(50, 380, "   a monster", CUSTOM_FONT, 18);
-  iShowText(50, 340, "3. Your goal is to escape the cave", CUSTOM_FONT, 18);
-  iShowText(50, 310, "   There are multiple levels in the cave and in each level", CUSTOM_FONT, 18);
-  iShowText(50, 280, "   there are some stars. find and collect all the stars to", CUSTOM_FONT, 18);
-  iShowText(50, 250, "   complete the level", CUSTOM_FONT, 18);
-  iShowText(50, 210, "4. The monster once spawned can trace the trails you leave", CUSTOM_FONT, 18);
-  iShowText(50, 180, "   behind. keep a certain distance from the monster and take", CUSTOM_FONT, 18);
-  iShowText(50, 150, "   cover and eventually it will stop chasing you", CUSTOM_FONT, 18);
-  iShowText(50, 110, "5. if the monster reaches up to you, the game is over. you", CUSTOM_FONT, 18);
-  iShowText(50, 80, "   can either give up or restart from last save", CUSTOM_FONT, 18);
-  iShowText(370, 30, "Good Luck!", CUSTOM_FONT, 18);
+  iShowText(50, 480, "1. Movement: use arrow keys to move around", CUSTOM_FONT, 16);
+  iShowText(50, 440, "2. Use space key to reveal an area around the player. but", CUSTOM_FONT, 16);
+  iShowText(50, 410, "   be careful there's a chance that the echo will spwan", CUSTOM_FONT, 16);
+  iShowText(50, 380, "   a monster", CUSTOM_FONT, 16);
+  iShowText(50, 340, "3. Your goal is to escape the cave", CUSTOM_FONT, 16);
+  iShowText(50, 310, "   There are multiple levels in the cave and in each level", CUSTOM_FONT, 16);
+  iShowText(50, 280, "   there are some stars. find and collect all the stars and", CUSTOM_FONT, 16);
+  iShowText(50, 250, "   escape the level to mark it as complete", CUSTOM_FONT, 16);
+  iShowText(50, 210, "4. The monster once spawned can trace the trails you leave", CUSTOM_FONT, 16);
+  iShowText(50, 180, "   behind. keep a certain distance from the monster and take", CUSTOM_FONT, 16);
+  iShowText(50, 150, "   cover and eventually it will stop chasing you", CUSTOM_FONT, 16);
+  iShowText(50, 110, "5. if the monster reaches up to you, the game is over. you", CUSTOM_FONT, 16);
+  iShowText(50, 80, "   can either give up or restart from last save", CUSTOM_FONT, 16);
+  iShowText(370, 30, "Good Luck!", CUSTOM_FONT, 16);
+}
+
+void credits_screen() { //-done
+  iSetColor(1, 0, 20);
+  iFilledRectangle(0, 0, 900, 600);
+  button("back2", 15, 540, 40, 40, &current_screen, START, 0);
+  iSetColor(255, 255, 255);
+  iShowText(380, 550, "Credits", CUSTOM_FONT, 30);
+  iShowText(250, 450, "2405152 - Mishkatul Habib Kabbo", CUSTOM_FONT, 18);
+  iShowText(270, 400, "2405153 - Yeasin Anzam Rifat", CUSTOM_FONT, 18);
+  iShowText(220, 300, "CSE level - 1 term - 1 project (BUET)", CUSTOM_FONT, 18);
+  iShowText(320, 250, "made using iGraphics", CUSTOM_FONT, 18);
+  iShowText(400, 40, "Thanks!", CUSTOM_FONT, 18);
 }
 
 void game_screen() { 
@@ -533,11 +552,11 @@ void game_screen() {
   // for (int i = 0; i < MAX_WAYPOINTS; i++)
   //   iShowLoadedImage(waypoints[i].x, waypoints[i].y, &waypoints_debug);
   // iShowSpeed(10, 300);
-  iShowSprite(&level_escape);
+  // iShowSprite(&level_escape);
 
   iSetSpritePosition(&level_escape, level_escape_pos.x, level_escape_pos.y);
-  // if (!is_revealed) iFilledRectangle(0, 0, 900, 600);
-  // if (is_revealed) iShowLoadedImage(player_pos.x - 785, player_pos.y - 470, &reveal);
+  if (!is_revealed) iFilledRectangle(0, 0, 900, 600);
+  if (is_revealed) iShowLoadedImage(player_pos.x - 810, player_pos.y - 495, &reveal);
   iShowLoadedImage(player_pos.x + 16, player_pos.y + 65, &player_pointer);
   iShowLoadedImage(monster_pos.x + 12, monster_pos.y + 65, &monster_pointer);
   showTime();
@@ -545,6 +564,8 @@ void game_screen() {
   char text[20];
   sprintf(text, "%d/%d", stars_collected, MAX_STARS);
   iShowText(70, 30, text, CUSTOM_FONT, 22);
+  if (stars_collected == 5) iShowText(20, 100, "All stars claimed!", CUSTOM_FONT, 18), iShowText(20, 80, "Move on to next level", CUSTOM_FONT, 18);
+  if (monster_state == 1) iShowText(300, 20, "Monster is chasing you", CUSTOM_FONT, 18);
   sprintf(text, "level: %d", current_level);
   iShowText(750, 30, text, CUSTOM_FONT, 22);
   int pause_button = 0;
@@ -583,7 +604,7 @@ void settings_screen() { //-done
   temp_check = difficulty;
   button("empty", 625, 355, 120, 25, &difficulty, !difficulty, 0);
   if (difficulty != temp_check) {
-    MONSTER_SPEED = difficulty ? 3.5 : 3;
+    MONSTER_SPEED = difficulty ? 3 : 2.5;
     LOS_STEP = MONSTER_SPEED;
     writeData(SETTINGS_FILE, TYPE_INTEGER, "difficulty_level", &difficulty);
   }
@@ -635,7 +656,7 @@ void victory_screen() { //-done
   iSetColor(255, 255, 255);
   iShowText(200, 450, "Congratulations!", CUSTOM_FONT, 42);
   iSetColor(0, 200, 40);
-  iShowText(390, 410, "you win!", CUSTOM_FONT, 24);
+  iShowText(340, 410, "you escaped!", CUSTOM_FONT, 24);
   char timeText[20];
   sprintf(timeText, "Time: %02d:%02d:%02d", hours, mins, sec);
   iSetColor(255, 255, 255);
@@ -644,11 +665,11 @@ void victory_screen() { //-done
   int button_action = -1;
   button("main_menu", 320, 150, 270, 60, &button_action, 0);
   switch (button_action) {
-    case 0: sound_played = false; loading_destination = START; current_screen = LOADING; reset_game(); updateLeaderboard(); break;
+    case 0: sound_played = false; loading_destination = START; current_screen = LOADING; updateLeaderboard(); reset_game(); break;
   }
 }
 
-void level_up() {
+void level_up() { //-done
   static bool sound_played = false;
   bool move_on = false;
   if (!level_init) {
@@ -667,7 +688,15 @@ void level_up() {
     button("continue", 320, 200, 270, 60, &button_action, 0);
     button("main_menu", 320, 138, 270, 60, &button_action, 1);
     switch (button_action) {
-      case 0: sound_played = false; stars_collected = 0; current_level++; move_on = true; break;
+      case 0:
+        sound_played = false;
+        stars_collected = 0;
+        for (int i = 0; i < MAX_STARS; i++) star_claimed[i] = 0;
+        current_level++;
+        move_on = true;
+        monster_state = 2;
+        monster_pos = {-100, -100};
+        break;
       case 1: save_game(); game_escape(START); break;
     }
     monster_state = 0;
@@ -710,6 +739,20 @@ void level_up() {
       current_collision_box = level_2_collision;
       break;
     case 3:
+      if (level_init != 2) { 
+        player_pos = {230, 130};
+        background_pos = {75, -300};
+        stars_collected = 0;
+        character_direction = 3;
+        star_locations[0] = {370, 980};
+        star_locations[1] = {870, 1400};
+        star_locations[2] = {1800, 850};
+        star_locations[3] = {2550, 750};
+        star_locations[4] = {1450, 100};
+        level_escape_pos = {2000, -72};
+      }
+      current_background = level_3_design;
+      current_collision_box = level_3_collision;
       break;
   }
   iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
@@ -767,7 +810,7 @@ void showLeaderboard() { //-done
   for (int i = 0; i < MAX_LEADERBOARD_DISPLAY; i++) {
     sprintf(number, "%d.", i + 1);
     iShowText(160, y, number, CUSTOM_FONT, 18);
-    iShowText(190, y, leaderboard[i].id[0] == '\0' ? "player" : leaderboard[i].id, CUSTOM_FONT, 18);
+    iShowText(190, y, leaderboard[i].id[0] == '\0' ? "none" : leaderboard[i].id, CUSTOM_FONT, 18);
     iShowText(640, y, leaderboard[i].value.leaderboard.time[0] == '\0' ? "00:00:00" : leaderboard[i].value.leaderboard.time, CUSTOM_FONT, 18);
     y -= 30;
   }
@@ -777,8 +820,8 @@ void showLeaderboard() { //-done
   button("empty", 400, 115, 100, 25, &button_action, 1, 0);
   button("back", 390, 70, 102, 25, &button_action, 0, 0);
   switch (button_action) {
-    case 0: current_screen = START; hasOpened = true; break;
-    case 1: current_screen = START; clear_file_data(LEADERBOARD_FILE); hasOpened = true; break;
+    case 0: hasOpened = true; for (int i = 0; i < MAX_LEADERBOARD_DISPLAY; i++) leaderboard[i] = {0}; current_screen = START; break;
+    case 1: hasOpened = true; for (int i = 0; i < MAX_LEADERBOARD_DISPLAY; i++) leaderboard[i] = {0}; loading_destination = START; current_screen = LOADING; clear_file_data(LEADERBOARD_FILE); break;
   }
 }
 
@@ -795,7 +838,7 @@ void play_screen() { //-done
   switch (button_action) {
     case 0:
       reset_game();
-      level_init = 1; 
+      level_init = 1;
       level_up();
       loading_destination = GAME_SCREEN;
       clear_file_data(GAME_DATA);
@@ -957,7 +1000,7 @@ void toggle(const char toggle_name[], int pos_x, int pos_y, bool *var_name, int 
 /*
  * Read and Write Functions
  **************************
- * enum - destination_file: SETTINGS_FILE, ...
+ * enum (kinda) - destination_file: SETTINGS_FILE, ...
  * enum - type_of_data: TYPE_STRING, TYPE_INT, ...
  * string - id: any name
  * pointer - value1, value2, ...
@@ -1101,14 +1144,19 @@ FileData readData(const char source_file[], const char id[], int array_type) {
  */
 
 void doFade() { //-done
-  if (is_revealed) is_revealed = 0;
-  if (!is_revealed) iPauseTimer(reveal_timer);
+  static int count = 0;
+  count++;
+  if (count == 7) {
+    if (is_revealed) is_revealed = 0, iPauseTimer(reveal_timer);
+    count = 0;
+  }
 }
 
 void loadResources() { //-done
   iLoadImage(&reveal, "assets/game_screen/reveal.png");
   iLoadImage(&cave_background, "assets/game_screen/cave_background.png");
   iLoadImage(&level_2_design, "assets/game_screen/level_2.png");
+  iLoadImage(&level_3_design, "assets/game_screen/level_3.png");
   iLoadImage(&timer_background, "assets/backgrounds/timer_bg.png");
   iLoadImage(&waypoints_debug, "assets/game_screen/waypoints_debug.png");
   iLoadImage(&player_pointer, "assets/game_screen/player_pointer.png");
@@ -1151,13 +1199,15 @@ void loadResources() { //-done
   iLoadImage(&monster_hitbox_image, "assets/game_screen/monster_sprites/monster_hitbox.png");
   iChangeSpriteFrames(&monster_hitbox, &monster_hitbox_image, 1);
   //debug
-  iLoadImage(&monster_temp_image, "assets/game_screen/monster_sprites/monster_temp.png");
-  iChangeSpriteFrames(&monster_temp, &monster_temp_image, 1);
+  // iLoadImage(&monster_temp_image, "assets/game_screen/monster_sprites/monster_temp.png");
+  // iChangeSpriteFrames(&monster_temp, &monster_temp_image, 1);
 
   iLoadImage(&cave_collision_box_image, "assets/game_screen/cave_collision_box.png");
   iLoadImage(&level_2_collision_image, "assets/game_screen/level_2_collision.png");
+  iLoadImage(&level_3_collision_image, "assets/game_screen/level_3_collision.png");
   iChangeSpriteFrames(&cave_collision_box, &cave_collision_box_image, 1);
   iChangeSpriteFrames(&level_2_collision, &level_2_collision_image, 1);
+  iChangeSpriteFrames(&level_3_collision, &level_3_collision_image, 1);
   iSetSpritePosition(&player_hitbox, player_pos.x, player_pos.y);
   iLoadImage(&los_checker_image, "assets/game_screen/los_checker.png");
   iChangeSpriteFrames(&los_checker, &los_checker_image, 1);
@@ -1226,7 +1276,10 @@ void move_player(int direction) { //-done
   }
 
   iSetSpritePosition(&player_hitbox, tentative_x, tentative_y);
-  if (iCheckCollision(&level_escape, &player_hitbox) && stars_collected == 5) level_init = 0, game_escape(LEVEL_UP, false);
+  if (iCheckCollision(&level_escape, &player_hitbox) && stars_collected == 5 ) 
+    if (current_level != 3) {
+      level_init = 0, game_escape(LEVEL_UP, false);
+    } else game_escape(VICTORY, false);
   if (!iCheckCollision(&current_collision_box, &player_hitbox)) {
     player_pos.x = tentative_x;
     player_pos.y = tentative_y;
@@ -1266,7 +1319,7 @@ void move_player(int direction) { //-done
   update_waypoints();
 }
 
-bool spawn_monster() {
+bool spawn_monster() {//-done
   if (monster_state != 2) return false;
   const float radius = 225;
   const int angle_step = 15; // try every 15 degrees (360 / 15 = 24 attempts)
@@ -1288,7 +1341,7 @@ bool spawn_monster() {
   return false;
 }
 
-void monster_ai() {
+void monster_ai() { //-done
   if (monster_state == 2) return;
 
   if (check_los(monster_pos, player_pos)) {
@@ -1496,7 +1549,7 @@ void clear_file_data(const char file[]) { //-done
   } else current_screen = ERROR_SCREEN; return;
 }
 
-void game_escape(int escape, bool bgm) {
+void game_escape(int escape, bool bgm) { //-done
   iSpecialKeyRelease(GLUT_KEY_END);
   iPauseTimer(monster_update);
   if (background_music_setting && bgm) iResumeSound(background_music);
