@@ -2,74 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Echo Caves - README</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Echo Caves - CSE 102 Project</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-      line-height: 1.6;
-      padding: 40px;
+      background-color: #f4f4f4;
+      color: #222;
       max-width: 800px;
-      margin: auto;
+      margin: 40px auto;
+      padding: 30px;
+      border: 1px solid #ccc;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
     h1 {
-      color: #00e0ff;
+      color: #0066cc;
     }
     h2 {
-      color: #ffa500;
+      color: #333;
+      margin-top: 30px;
     }
-    a {
-      color: #00e0ff;
+    ul {
+      padding-left: 20px;
     }
     .devs {
+      background-color: #f0f0f0;
+      border-left: 5px solid #0066cc;
+      padding: 15px;
       margin-top: 20px;
-      padding: 10px;
-      background-color: #1e1e1e;
-      border-left: 5px solid #00e0ff;
     }
     .footer {
-      margin-top: 50px;
       font-size: 0.9em;
-      color: #888;
-      border-top: 1px solid #333;
+      color: #666;
+      margin-top: 40px;
+      border-top: 1px solid #ddd;
       padding-top: 20px;
     }
   </style>
 </head>
 <body>
+
   <h1>🎮 Echo Caves</h1>
-  <p>
-    <strong>Echo Caves</strong> is a 2D sound-based exploration game developed as a term project for 
-    <strong>CSE 102 (Structured Programming Language)</strong> at <strong>BUET</strong>.
-    The game places players in a mysterious, dark cave system where visibility is nearly zero and navigation relies on echolocation-like sound pulses.
-  </p>
+  
+  <p><strong>Echo Caves</strong> is a 2D sound-based adventure game developed as part of the course project for 
+  <strong>CSE 102: Structured Programming Language</strong> during Level 1, Term 1 at the 
+  <strong>Department of Computer Science and Engineering, BUET</strong>.</p>
 
-  <p>
-    Players must explore and survive using carefully timed sound waves that briefly reveal the cave layout, helping them avoid traps, locate exits, and find the safest path forward.
-  </p>
+  <p>The game is built using the <strong>iGraphics</strong> graphics library in the C programming language. 
+  Players take on the role of an explorer trapped in a completely dark cave system, where vision is replaced 
+  by sound. Navigation relies on emitting sonar-like pulses that momentarily reveal the nearby environment.</p>
 
-  <h2>🛠 Features</h2>
+  <h2>🔧 Project Features</h2>
   <ul>
-    <li>Dark cave exploration with echolocation-based visualization</li>
-    <li>Character animation using sprites</li>
-    <li>Sound effects and event-driven feedback</li>
-    <li>Leaderboard with file-based score saving</li>
-    <li>Multiple game states: Menu, Gameplay, Game Over, Leaderboard</li>
+    <li>Interactive cave exploration with echolocation-based mechanics</li>
+    <li>2D sprite-based character animation</li>
+    <li>Sound feedback for environment interaction</li>
+    <li>Screen transitions (menu, gameplay, game over, leaderboard)</li>
+    <li>Leaderboard system using file I/O for score saving</li>
+    <li>Modular structure using C functions and logic separation</li>
   </ul>
 
-  <h2>🧑‍💻 Developers</h2>
+  <h2>👨‍💻 Developers</h2>
   <div class="devs">
     <p><strong>Md Mishkatul Habib</strong><br />
-    CSE '24, BUET</p>
+    Student, CSE 24<br />
+    Bangladesh University of Engineering and Technology (BUET)</p>
 
     <p><strong>Yeasin Anzam Rifat</strong><br />
-    CSE '24, BUET</p>
+    Student, CSE 24<br />
+    Bangladesh University of Engineering and Technology (BUET)</p>
   </div>
 
   <div class="footer">
-    <p>This project was developed as part of the Level 1 Term 1 coursework in CSE 102 at BUET.</p>
+    <p>This game was developed as part of the academic curriculum of CSE 102 to demonstrate fundamental programming concepts, graphics handling, and user interaction using the C programming language.</p>
   </div>
+
 </body>
 </html>
