@@ -33,6 +33,9 @@
       padding: 15px;
       margin-top: 20px;
     }
+    .dev {
+      margin-bottom: 15px;
+    }
     .footer {
       font-size: 0.9em;
       color: #666;
@@ -60,24 +63,4 @@
     <li>2D sprite-based character animation</li>
     <li>Sound feedback for environment interaction</li>
     <li>Screen transitions (menu, gameplay, game over, leaderboard)</li>
-    <li>Leaderboard system using file I/O for score saving</li>
-    <li>Modular structure using C functions and logic separation</li>
-  </ul>
-
-  <h2>👨‍💻 Developers</h2>
-  <div class="devs">
-    <p><strong>Md Mishkatul Habib</strong><br />
-    Student, CSE 24<br />
-    Bangladesh University of Engineering and Technology (BUET)</p>
-
-    <p><strong>Yeasin Anzam Rifat</strong><br />
-    Student, CSE 24<br />
-    Bangladesh University of Engineering and Technology (BUET)</p>
-  </div>
-
-  <div class="footer">
-    <p>This game was developed as part of the academic curriculum of CSE 102 to demonstrate fundamental programming concepts, graphics handling, and user interaction using the C programming language.</p>
-  </div>
-
-</body>
-</html>
+    <li>Leaderboard system using file I/O for score saving
