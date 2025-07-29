@@ -1,8 +1,6 @@
 # 🎮 Echo Caves
 
-**Echo Caves** is a 2D sound-based adventure game developed as a course project for  
-**CSE 102: Structured Programming Language**, Level 1 Term 1,  
-Department of Computer Science and Engineering, **BUET**.
+**Echo Caves** is a 2D sound-based adventure game developed as a course project for  **CSE 102: Structured Programming Language**, Level 1 Term 1,  Department of Computer Science and Engineering, **BUET**.
 
 ---
 
@@ -22,8 +20,7 @@ Department of Computer Science and Engineering, **BUET**.
 
 ## 🧭 Game Overview
 
-You play as an explorer trapped in a pitch-black cave.  
-You can't see — you must rely on **sound pulses** to briefly reveal the surrounding cave walls and obstacles, simulating **echolocation**. Navigate carefully, avoid hazards, and try to escape the depths.
+You play as an explorer trapped in a pitch-black cave. You can't see — you must rely on **sound pulses** to briefly reveal the surrounding cave walls and obstacles, simulating **echolocation**. Navigate carefully, avoid hazards, and try to escape the depths.
 
 The game is built using the **iGraphics** graphics library in the **C programming language**.
 
