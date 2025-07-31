@@ -136,6 +136,7 @@ float monster_offset;
 Vec2 monster_target;
 bool has_target = false;
 int monster_idle_timer = 0;
+int monster_chasing_timer = 0;
 int monster_despawn_timer = 0;
 int animation_direction, draw_order;
 
@@ -1344,7 +1345,11 @@ bool spawn_monster() {//-done
 void monster_ai() { //-done
   if (monster_state == 2) return;
 
-  if (check_los(monster_pos, player_pos)) {
+  float dx = monster_target.x - monster_pos.x;
+  float dy = monster_target.y - monster_pos.y;
+  float dist = sqrt(dx * dx + dy * dy);
+
+  if (check_los(monster_pos, player_pos) && dist < 500) {
     monster_target = player_pos;
     has_target = true;
     monster_idle_timer = 0;
@@ -1373,11 +1378,11 @@ void monster_ai() { //-done
     }
   }
 
-  float dx = monster_target.x - monster_pos.x;
-  float dy = monster_target.y - monster_pos.y;
-  float dist = sqrt(dx * dx + dy * dy);
+  dx = monster_target.x - monster_pos.x;
+  dy = monster_target.y - monster_pos.y;
+  dist = sqrt(dx * dx + dy * dy);
 
-  if (dist > MONSTER_SPEED) {
+  if (dist > 10) {
     float dir_x = dx / dist;
     float dir_y = dy / dist;
 
