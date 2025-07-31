@@ -48,7 +48,6 @@ The game is built using the **iGraphics** graphics library in the **C programmin
   Bangladesh University of Engineering and Technology (BUET)
 
 ---
----
 
 ## 📁 Project Context
 
